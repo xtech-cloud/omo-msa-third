@@ -3,20 +3,21 @@ package grpc
 import (
 	"encoding/json"
 	"github.com/micro/go-micro/v2/logger"
+	pbstatus "github.com/xtech-cloud/omo-msp-status/proto/status"
 	pb "github.com/xtech-cloud/omo-msp-third/proto/third"
 )
 
-func inLog(name, data interface{})  {
+func inLog(name, data interface{}) {
 	bytes, _ := json.Marshal(data)
 	msg := ByteString(bytes)
 	logger.Infof("[in.%s]:data = %s", name, msg)
 }
 
-func outError(name, msg string, code pb.ResultCode) *pb.ReplyStatus {
+func outError(name, msg string, code pbstatus.ResultStatus) *pb.ReplyStatus {
 	logger.Warnf("[error.%s]:code = %d, msg = %s", name, code, msg)
 	tmp := &pb.ReplyStatus{
-		Code: code,
-		Msg: msg,
+		Code: uint32(code),
+		Msg:  msg,
 	}
 	return tmp
 }
@@ -27,7 +28,7 @@ func outLog(name, data interface{}) *pb.ReplyStatus {
 	logger.Infof("[out.%s]:data = %s", name, msg)
 	tmp := &pb.ReplyStatus{
 		Code: 0,
-		Msg: "",
+		Msg:  "",
 	}
 	return tmp
 }

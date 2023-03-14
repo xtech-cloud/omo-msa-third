@@ -39,6 +39,7 @@ func main() {
 	// Register Handler
 	_ = proto.RegisterPartnerServiceHandler(service.Server(), new(grpc.PartnerService))
 	_ = proto.RegisterChannelServiceHandler(service.Server(), new(grpc.ChannelService))
+	_ = proto.RegisterMotionServiceHandler(service.Server(), new(grpc.MotionService))
 
 	app, _ := filepath.Abs(os.Args[0])
 
@@ -56,5 +57,3 @@ func main() {
 		logger.Fatal(err)
 	}
 }
-
-
