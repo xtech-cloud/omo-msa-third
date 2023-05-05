@@ -15,4 +15,7 @@ const (
 	TableSequence = "sequences"
 
 	TableMotion = "motions"
+
+	TableRecommend = "website_recommends"
+	TableCarousel  = "website_carousels"
 )

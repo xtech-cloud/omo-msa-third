@@ -20,7 +20,12 @@ func switchMotion(info *cache.MotionInfo) *pb.MotionInfo {
 	tmp.Updated = info.UpdateTime.Unix()
 	tmp.Created = info.CreateTime.Unix()
 	tmp.Creator = info.Creator
-
+	tmp.Count = info.Count
+	tmp.Sn = info.SN
+	tmp.Content = info.Content
+	tmp.Event = info.EventID
+	tmp.App = info.AppID
+	tmp.Scene = info.Scene
 	return tmp
 }
 
@@ -28,7 +33,7 @@ func (mine *MotionService) AddOne(ctx context.Context, in *pb.ReqMotionAdd, out 
 	path := "motion.addOne"
 	inLog(path, in)
 
-	info, err := cache.Context().CreateMotion(in.Scene, in.App, in.Sn, in.Event, in.Operator, in.Count)
+	info, err := cache.Context().CreateMotion(in.Scene, in.App, in.Sn, in.Event, in.Content, in.Operator, in.Count)
 	if err != nil {
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
@@ -85,7 +90,11 @@ func (mine *MotionService) GetByFilter(ctx context.Context, in *pb.RequestFilter
 		array = cache.Context().GetMotionsByEvent(in.Scene, in.Value)
 	} else if in.Field == "association" {
 		if len(in.List) > 2 {
-			array = cache.Context().GetMotionsBy(in.Scene, in.List[0], in.List[1])
+			array = cache.Context().GetMotionsBy(in.Scene, in.List[0], in.List[1], in.List[2])
+		}
+	} else if in.Field == "content" {
+		if len(in.List) > 1 {
+			array = cache.Context().GetMotionsByContent(in.Scene, in.List[0], in.List[1])
 		}
 	}
 	out.List = make([]*pb.MotionInfo, 0, len(array))
@@ -103,9 +112,16 @@ func (mine *MotionService) GetStatistic(ctx context.Context, in *pb.RequestFilte
 	inLog(path, in)
 	if in.Field == "count" {
 		if len(in.List) > 2 {
-			array := cache.Context().GetMotionsBy(in.Scene, in.List[0], in.List[1])
-			if len(array) > 0 {
-				out.Count = array[0].Count
+			array := cache.Context().GetMotionsBy(in.Scene, in.List[0], in.List[1], in.List[2])
+			for _, info := range array {
+				out.Count += info.Count
+			}
+		}
+	} else if in.Field == "content" {
+		if len(in.List) > 1 {
+			array := cache.Context().GetMotionsByEveContent(in.Scene, in.List[0], in.List[1])
+			for _, info := range array {
+				out.Count += info.Count
 			}
 		}
 	}
@@ -126,7 +142,7 @@ func (mine *MotionService) UpdateByFilter(ctx context.Context, in *pb.RequestUpd
 		return nil
 	}
 	var err error
-	if in.Field == "count" {
+	if in.Field == "offset" {
 		num, er := strconv.ParseInt(in.Value, 10, 32)
 		if er == nil {
 			err = info.UpdateCount(uint32(num), in.Operator)

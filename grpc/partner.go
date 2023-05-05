@@ -172,7 +172,7 @@ func (mine *PartnerService) GetStatistic(ctx context.Context, in *pb.RequestFilt
 	inLog(path, in)
 	if in.Field == "count" {
 		if len(in.List) > 2 {
-			array := cache.Context().GetMotionsBy(in.Scene, in.List[0], in.List[1])
+			array := cache.Context().GetMotionsBy(in.Scene, in.List[0], in.List[1], in.List[2])
 			if len(array) > 0 {
 				out.Count = array[0].Count
 			}
@@ -212,4 +212,3 @@ func (mine *PartnerService) UpdateByFilter(ctx context.Context, in *pb.RequestUp
 	out.Status = outLog(path, out)
 	return nil
 }
-

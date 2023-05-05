@@ -18,12 +18,13 @@ type Motion struct {
 	Creator     string             `json:"creator" bson:"creator"`
 	Operator    string             `json:"operator" bson:"operator"`
 
+	Count   uint32 `json:"count" bson:"count"`
 	Scene   string `json:"scene" bson:"scene"`
 	AppID   string `json:"app" bson:"app"`
 	SN      string `json:"sn" bson:"sn"`
-	UserID  string `json:"userID" bson:"userID"`
-	EventID string `json:"eventID" bson:"eventID"`
-	Count   uint32 `json:"count" bson:"count"`
+	UserID  string `json:"user" bson:"user"`
+	EventID string `json:"event" bson:"event"`
+	Content string `json:"content" bson:"content"`
 }
 
 func CreateMotion(info *Motion) error {
@@ -80,7 +81,7 @@ func GetMotion(uid string) (*Motion, error) {
 
 func GetMotionsByEventID(scene, eve string) ([]*Motion, error) {
 	def := new(time.Time)
-	filter := bson.M{"scene": scene, "eventID": eve, "deleteAt": def}
+	filter := bson.M{"scene": scene, "event": eve, "deleteAt": def}
 	cursor, err1 := findMany(TableMotion, filter, 0)
 	if err1 != nil {
 		return nil, err1
@@ -116,9 +117,47 @@ func GetMotionsBySN(scene, sn string) ([]*Motion, error) {
 	return items, nil
 }
 
-func GetMotionsBy(scene, sn, event string) ([]*Motion, error) {
+func GetMotionsBy(scene, sn, event, content string) ([]*Motion, error) {
 	def := new(time.Time)
-	filter := bson.M{"scene": scene, "sn": sn, "eventID": event, "deleteAt": def}
+	filter := bson.M{"scene": scene, "sn": sn, "event": event, "content": content, "deleteAt": def}
+	cursor, err1 := findMany(TableMotion, filter, 0)
+	if err1 != nil {
+		return nil, err1
+	}
+	var items = make([]*Motion, 0, 20)
+	for cursor.Next(context.Background()) {
+		var node = new(Motion)
+		if err := cursor.Decode(node); err != nil {
+			return nil, err
+		} else {
+			items = append(items, node)
+		}
+	}
+	return items, nil
+}
+
+func GetMotionsByContent(scene, sn, content string) ([]*Motion, error) {
+	def := new(time.Time)
+	filter := bson.M{"scene": scene, "sn": sn, "content": content, "deleteAt": def}
+	cursor, err1 := findMany(TableMotion, filter, 0)
+	if err1 != nil {
+		return nil, err1
+	}
+	var items = make([]*Motion, 0, 20)
+	for cursor.Next(context.Background()) {
+		var node = new(Motion)
+		if err := cursor.Decode(node); err != nil {
+			return nil, err
+		} else {
+			items = append(items, node)
+		}
+	}
+	return items, nil
+}
+
+func GetMotionsByEventContent(scene, event, content string) ([]*Motion, error) {
+	def := new(time.Time)
+	filter := bson.M{"scene": scene, "event": event, "content": content, "deleteAt": def}
 	cursor, err1 := findMany(TableMotion, filter, 0)
 	if err1 != nil {
 		return nil, err1

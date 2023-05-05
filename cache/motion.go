@@ -7,16 +7,17 @@ import (
 )
 
 type MotionInfo struct {
+	Count uint32
 	baseInfo
 	Scene   string
 	AppID   string
 	SN      string
 	UserID  string
 	EventID string
-	Count   uint32
+	Content string
 }
 
-func (mine *cacheContext) CreateMotion(scene, app, sn, eveID, operator string, count uint32) (*MotionInfo, error) {
+func (mine *cacheContext) CreateMotion(scene, app, sn, eveID, content, operator string, count uint32) (*MotionInfo, error) {
 	db := new(nosql.Motion)
 	db.UID = primitive.NewObjectID()
 	db.ID = nosql.GetMotionNextID()
@@ -29,6 +30,7 @@ func (mine *cacheContext) CreateMotion(scene, app, sn, eveID, operator string, c
 	db.SN = sn
 	db.EventID = eveID
 	db.Count = count
+	db.Content = content
 
 	err := nosql.CreateMotion(db)
 	if err == nil {
@@ -79,8 +81,34 @@ func (mine *cacheContext) GetMotionsByEvent(scene, id string) []*MotionInfo {
 	return list
 }
 
-func (mine *cacheContext) GetMotionsBy(scene, sn, event string) []*MotionInfo {
-	dbs, err := nosql.GetMotionsBy(scene, sn, event)
+func (mine *cacheContext) GetMotionsBy(scene, sn, event, content string) []*MotionInfo {
+	dbs, err := nosql.GetMotionsBy(scene, sn, event, content)
+	list := make([]*MotionInfo, 0, len(dbs))
+	if err == nil {
+		for _, db := range dbs {
+			info := new(MotionInfo)
+			info.initInfo(db)
+			list = append(list, info)
+		}
+	}
+	return list
+}
+
+func (mine *cacheContext) GetMotionsByContent(scene, sn, content string) []*MotionInfo {
+	dbs, err := nosql.GetMotionsByContent(scene, sn, content)
+	list := make([]*MotionInfo, 0, len(dbs))
+	if err == nil {
+		for _, db := range dbs {
+			info := new(MotionInfo)
+			info.initInfo(db)
+			list = append(list, info)
+		}
+	}
+	return list
+}
+
+func (mine *cacheContext) GetMotionsByEveContent(scene, eve, content string) []*MotionInfo {
+	dbs, err := nosql.GetMotionsByEventContent(scene, eve, content)
 	list := make([]*MotionInfo, 0, len(dbs))
 	if err == nil {
 		for _, db := range dbs {
@@ -104,6 +132,7 @@ func (mine *MotionInfo) initInfo(db *nosql.Motion) {
 	mine.AppID = db.AppID
 	mine.Count = db.Count
 	mine.UserID = db.UserID
+	mine.Content = db.Content
 }
 
 func (mine *MotionInfo) UpdateCount(offset uint32, operator string) error {
