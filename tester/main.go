@@ -2,18 +2,14 @@ package main
 
 import (
 	"context"
-	"io"
 	"time"
-
-	"omo.msa.third/config"
-
-	proto "github.com/xtech-cloud/omo-msp-favorite/proto/favorite"
 
 	"github.com/micro/go-micro/v2"
 	"github.com/micro/go-micro/v2/client"
 	"github.com/micro/go-micro/v2/logger"
 	_ "github.com/micro/go-plugins/registry/consul/v2"
 	_ "github.com/micro/go-plugins/registry/etcdv3/v2"
+	"omo.msa.third/config"
 )
 
 func main() {
