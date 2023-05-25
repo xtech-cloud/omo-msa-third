@@ -22,10 +22,11 @@ func switchCarouse(info *cache.CarouselInfo) *pb.CarouselInfo {
 	tmp.Owner = info.Owner
 	tmp.Quotes = make([]*pb.QuoteInfo, 0, len(info.Quotes))
 	for _, quote := range info.Quotes {
-		tmp.Quotes = append(tmp.Quotes, &pb.QuoteInfo{Uid: quote.UID,
-			Asset: quote.Asset,
-			Type:  uint32(quote.Type),
-			Title: quote.Title, Updated: quote.Updated})
+		tmp.Quotes = append(tmp.Quotes,
+			&pb.QuoteInfo{Uid: quote.UID,
+				Asset: quote.Asset,
+				Type:  uint32(quote.Type),
+				Title: quote.Title, Updated: quote.Updated})
 	}
 	return tmp
 }
@@ -106,11 +107,15 @@ func (mine *CarouselService) GetList(ctx context.Context, in *pb.RequestPage, ou
 	var array []*cache.CarouselInfo
 	var max uint32 = 0
 	var pages uint32 = 0
+	info, err := cache.Context().GetCarousel(in.Owner)
+	if err != nil {
+		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
+		return nil
+	}
 
 	out.List = make([]*pb.CarouselInfo, 0, len(array))
-	for _, val := range array {
-		out.List = append(out.List, switchCarouse(val))
-	}
+	out.List = append(out.List, switchCarouse(info))
+
 	out.Total = uint64(max)
 	out.PageMax = pages
 	out.Status = outLog(path, fmt.Sprintf("the length = %d", len(out.List)))
@@ -145,10 +150,7 @@ func (mine *CarouselService) GetStatistic(ctx context.Context, in *pb.RequestFil
 func (mine *CarouselService) UpdateByFilter(ctx context.Context, in *pb.RequestUpdate, out *pb.ReplyInfo) error {
 	path := "carousel.updateByFilter"
 	inLog(path, in)
-	if len(in.Uid) < 1 {
-		out.Status = outError(path, "the carouse uid is empty", pbstatus.ResultStatus_Empty)
-		return nil
-	}
+
 	info, err1 := cache.Context().GetCarousel(in.Scene)
 	if err1 != nil {
 		out.Status = outError(path, err1.Error(), pbstatus.ResultStatus_NotExisted)

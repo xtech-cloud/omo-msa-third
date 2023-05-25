@@ -1,6 +1,7 @@
 package cache
 
 import (
+	"errors"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"omo.msa.third/proxy/nosql"
 	"time"
@@ -56,6 +57,9 @@ func (mine *cacheContext) GetRecommend(owner string, tp uint8) (*RecommendInfo, 
 }
 
 func (mine *cacheContext) GetRecommendBy(owner string) ([]*RecommendInfo, error) {
+	if owner == "" {
+		return nil, errors.New("the owner is empty")
+	}
 	dbs, err := nosql.GetRecommendByOwner(owner)
 	if err != nil {
 		return nil, err

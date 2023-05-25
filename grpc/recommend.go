@@ -119,7 +119,11 @@ func (mine *RecommendService) GetList(ctx context.Context, in *pb.RequestPage, o
 	var array []*cache.RecommendInfo
 	var max uint32 = 0
 	var pages uint32 = 0
-
+	array, err := cache.Context().GetRecommendBy(in.Owner)
+	if err != nil {
+		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
+		return nil
+	}
 	out.List = make([]*pb.RecommendInfo, 0, len(array))
 	for _, val := range array {
 		out.List = append(out.List, switchRecommend(val))
