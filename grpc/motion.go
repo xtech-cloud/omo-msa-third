@@ -96,6 +96,8 @@ func (mine *MotionService) GetByFilter(ctx context.Context, in *pb.RequestFilter
 		if len(in.List) > 1 {
 			array = cache.Context().GetMotionsByContent(in.Scene, in.List[0], in.List[1])
 		}
+	} else {
+
 	}
 	out.List = make([]*pb.MotionInfo, 0, len(array))
 	for _, val := range array {
