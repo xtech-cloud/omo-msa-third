@@ -146,7 +146,7 @@ func (mine *ChannelService) UpdateByFilter(ctx context.Context, in *pb.RequestUp
 	if in.Field == "count" {
 		num, er := strconv.ParseInt(in.Value, 10, 32)
 		if er == nil {
-			err = info.UpdateCount(uint32(num), in.Operator)
+			err = info.AddCount(uint32(num), in.Operator)
 		} else {
 			err = er
 		}

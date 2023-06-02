@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"io"
 	"os"
@@ -69,6 +70,7 @@ func mergeFile(_config config.Config) {
 	if nil != err {
 		logger.Errorf("load config %v failed: %v", filepath, err)
 	} else {
+		fmt.Println("merge file...." + envConfig.Key)
 		logger.Infof("load config %v success", filepath)
 		_config.Scan(&Schema)
 	}
@@ -115,14 +117,15 @@ Loop:
 				etcd.WithAddress(addr)
 				err := _config.Load(etcdSource)
 				if nil == err {
-					logger.Infof("load config %v from %v success", etcdKey, addr)
+					logger.Info("load config %v from %v success", etcdKey, addr)
 					break Loop
 				} else {
-					logger.Errorf("load config %v from %v failed: %v", etcdKey, addr, err)
+					logger.Error("load config %v from %v failed: %v", etcdKey, addr, err)
 				}
 			}
 		}
 	}
+	fmt.Sprintln("merge etcd...." + envConfig.Key)
 	_config.Get(envConfig.Key).Scan(&Schema)
 }
 
@@ -162,7 +165,6 @@ func Setup() {
 			mergeEtcd(conf)
 		}
 	}
-
 	ycd, err := json.Marshal(&Schema)
 	if nil != err {
 		logger.Error(err)
@@ -177,12 +179,12 @@ func Setup() {
 func getLoggerOut() io.Writer {
 	path := Schema.Logger.File
 	logger.Info("logger path = " + path)
-	log :=&lumberjack.Logger{
+	log := &lumberjack.Logger{
 		LocalTime:  true,
 		Filename:   path,
 		MaxSize:    20, // megabytes
 		MaxBackups: 20,
-		MaxAge:     0,    //days
+		MaxAge:     0,     //days
 		Compress:   false, // disabled by default
 	}
 	if Schema.Logger.Std {
@@ -191,7 +193,7 @@ func getLoggerOut() io.Writer {
 			os.Stdout,
 		}
 		return io.MultiWriter(writers...)
-	}else{
+	} else {
 		writers := []io.Writer{
 			log,
 		}
@@ -199,7 +201,7 @@ func getLoggerOut() io.Writer {
 	}
 }
 
-func initLogger(mode string)  {
+func initLogger(mode string) {
 	out := getLoggerOut()
 	if "debug" == mode {
 		logger.DefaultLogger = logrusPlugin.NewLogger(

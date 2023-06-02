@@ -90,7 +90,9 @@ func (mine *MotionService) GetByFilter(ctx context.Context, in *pb.RequestFilter
 		array = cache.Context().GetMotionsByEvent(in.Scene, in.Value)
 	} else if in.Field == "association" {
 		if len(in.List) > 2 {
-			array = cache.Context().GetMotionsBy(in.Scene, in.List[0], in.List[1], in.List[2])
+			item := cache.Context().GetMotionBy(in.Scene, in.List[0], in.List[1], in.List[2])
+			array = make([]*cache.MotionInfo, 0, 1)
+			array = append(array, item)
 		}
 	} else if in.Field == "content" {
 		if len(in.List) > 1 {
@@ -114,14 +116,19 @@ func (mine *MotionService) GetStatistic(ctx context.Context, in *pb.RequestFilte
 	inLog(path, in)
 	if in.Field == "count" {
 		if len(in.List) > 2 {
-			array := cache.Context().GetMotionsBy(in.Scene, in.List[0], in.List[1], in.List[2])
+			item := cache.Context().GetMotionBy(in.Scene, in.List[0], in.List[1], in.List[2])
+			out.Count = item.Count
+		}
+	} else if in.Field == "content" {
+		for _, s := range in.List {
+			array := cache.Context().GetMotionsByEveContent(in.Scene, s, in.Value)
 			for _, info := range array {
 				out.Count += info.Count
 			}
 		}
-	} else if in.Field == "content" {
-		if len(in.List) > 1 {
-			array := cache.Context().GetMotionsByEveContent(in.Scene, in.List[0], in.List[1])
+	} else if in.Field == "events" {
+		for _, s := range in.List {
+			array := cache.Context().GetMotionsByEvent(in.Scene, s)
 			for _, info := range array {
 				out.Count += info.Count
 			}
@@ -147,7 +154,7 @@ func (mine *MotionService) UpdateByFilter(ctx context.Context, in *pb.RequestUpd
 	if in.Field == "offset" {
 		num, er := strconv.ParseInt(in.Value, 10, 32)
 		if er == nil {
-			err = info.UpdateCount(uint32(num), in.Operator)
+			err = info.AddCount(uint32(num), in.Operator)
 		} else {
 			err = er
 		}

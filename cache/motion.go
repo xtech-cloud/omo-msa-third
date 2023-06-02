@@ -3,6 +3,7 @@ package cache
 import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"omo.msa.third/proxy/nosql"
+	"strings"
 	"time"
 )
 
@@ -81,40 +82,41 @@ func (mine *cacheContext) GetMotionsByEvent(scene, id string) []*MotionInfo {
 	return list
 }
 
-func (mine *cacheContext) GetMotionsBy(scene, sn, event, content string) []*MotionInfo {
-	dbs, err := nosql.GetMotionsBy(scene, sn, event, content)
-	list := make([]*MotionInfo, 0, len(dbs))
+func (mine *cacheContext) GetMotionBy(scene, sn, event, content string) *MotionInfo {
+	db, err := nosql.GetMotionBy(scene, sn, event, content)
 	if err == nil {
-		for _, db := range dbs {
-			info := new(MotionInfo)
-			info.initInfo(db)
-			list = append(list, info)
-		}
+		info := new(MotionInfo)
+		info.initInfo(db)
+		return info
 	}
-	return list
+	return nil
 }
 
 func (mine *cacheContext) GetMotionsByContent(scene, sn, content string) []*MotionInfo {
-	dbs, err := nosql.GetMotionsByContent(scene, sn, content)
+	dbs, err := nosql.GetMotionsBySN(scene, sn)
 	list := make([]*MotionInfo, 0, len(dbs))
 	if err == nil {
 		for _, db := range dbs {
-			info := new(MotionInfo)
-			info.initInfo(db)
-			list = append(list, info)
+			if strings.Contains(db.Content, content) {
+				info := new(MotionInfo)
+				info.initInfo(db)
+				list = append(list, info)
+			}
 		}
 	}
 	return list
 }
 
 func (mine *cacheContext) GetMotionsByEveContent(scene, eve, content string) []*MotionInfo {
-	dbs, err := nosql.GetMotionsByEventContent(scene, eve, content)
+	dbs, err := nosql.GetMotionsByEventID(scene, eve)
 	list := make([]*MotionInfo, 0, len(dbs))
 	if err == nil {
 		for _, db := range dbs {
-			info := new(MotionInfo)
-			info.initInfo(db)
-			list = append(list, info)
+			if strings.Contains(db.Content, content) {
+				info := new(MotionInfo)
+				info.initInfo(db)
+				list = append(list, info)
+			}
 		}
 	}
 	return list
@@ -135,7 +137,7 @@ func (mine *MotionInfo) initInfo(db *nosql.Motion) {
 	mine.Content = db.Content
 }
 
-func (mine *MotionInfo) UpdateCount(offset uint32, operator string) error {
+func (mine *MotionInfo) AddCount(offset uint32, operator string) error {
 	err := nosql.UpdateMotionCount(mine.UID, operator, mine.Count+offset)
 	if err == nil {
 		mine.Count = mine.Count + offset

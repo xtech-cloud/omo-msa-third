@@ -45,6 +45,8 @@ func main() {
 
 	app, _ := filepath.Abs(os.Args[0])
 
+	go cache.CheckAnalyse()
+
 	logger.Info("-------------------------------------------------------------")
 	logger.Info("- Micro Service Agent -> Run")
 	logger.Info("-------------------------------------------------------------")

@@ -16,6 +16,8 @@ const (
 
 	TableMotion = "motions"
 
+	TableDevice = "devices"
+
 	TableRecommend = "website_recommends"
 	TableCarousel  = "website_carousels"
 )

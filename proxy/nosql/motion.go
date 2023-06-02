@@ -136,6 +136,21 @@ func GetMotionsBy(scene, sn, event, content string) ([]*Motion, error) {
 	return items, nil
 }
 
+func GetMotionBy(scene, sn, event, content string) (*Motion, error) {
+	def := new(time.Time)
+	filter := bson.M{"scene": scene, "sn": sn, "event": event, "content": content, "deleteAt": def}
+	result, err := findOneBy(TableMotion, filter)
+	if err != nil {
+		return nil, err
+	}
+	model := new(Motion)
+	err1 := result.Decode(&model)
+	if err1 != nil {
+		return nil, err1
+	}
+	return model, nil
+}
+
 func GetMotionsByContent(scene, sn, content string) ([]*Motion, error) {
 	def := new(time.Time)
 	filter := bson.M{"scene": scene, "sn": sn, "content": content, "deleteAt": def}
