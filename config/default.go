@@ -26,7 +26,7 @@ const defaultJson string = `{
         "token":"ogm.dev"
 	},
     "analyse":{
-		"history": false,
+		"history": true,
 		"timer":"38 18 * * *",
 		"days":-1,
 		"events": [

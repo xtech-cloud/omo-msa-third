@@ -3,6 +3,7 @@ package cache
 import (
 	"encoding/base64"
 	"encoding/json"
+	"fmt"
 	"github.com/micro/go-micro/v2/logger"
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
@@ -36,7 +37,7 @@ func CheckAnalyse() {
 	time.Sleep(time.Second * 10)
 	if config.Schema.Analyse.History {
 		logger.Warn("check history events....")
-		start := time.Now().AddDate(0, 0, -20).UnixMilli()
+		start := time.Now().AddDate(0, 0, -30).UnixMilli()
 		end := time.Now().AddDate(0, 0, config.Schema.Analyse.Days).UnixMilli()
 		cacheCtx.checkOldEvents(start, end)
 	}
@@ -139,8 +140,10 @@ func (mine *cacheContext) getOldEvents(sn, event string, start, end int64) ([]*T
 	}
 
 	content := result.Get("content").String()
-	byes, err := base64.StdEncoding.DecodeString(content)
-	err = json.Unmarshal(byes, list)
+	bytes, err := base64.StdEncoding.DecodeString(content)
+	msg := string(bytes)
+	fmt.Println(msg)
+	err = json.Unmarshal(bytes, &list)
 	if err != nil {
 		return nil, err, pbstatus.ResultStatus_FormatError
 	}
