@@ -82,6 +82,19 @@ func (mine *cacheContext) GetMotionsByEvent(scene, id string) []*MotionInfo {
 	return list
 }
 
+func (mine *cacheContext) GetMotionsBySNEvent(scene, sn, id string) []*MotionInfo {
+	dbs, err := nosql.GetMotionsBySNEvent(scene, sn, id)
+	list := make([]*MotionInfo, 0, len(dbs))
+	if err == nil {
+		for _, db := range dbs {
+			info := new(MotionInfo)
+			info.initInfo(db)
+			list = append(list, info)
+		}
+	}
+	return list
+}
+
 func (mine *cacheContext) GetMotionBy(scene, sn, event, content string) *MotionInfo {
 	db, err := nosql.GetMotionBy(scene, sn, event, content)
 	if err == nil {

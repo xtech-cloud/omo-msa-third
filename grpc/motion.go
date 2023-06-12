@@ -120,15 +120,15 @@ func (mine *MotionService) GetStatistic(ctx context.Context, in *pb.RequestFilte
 			out.Count = item.Count
 		}
 	} else if in.Field == "content" {
-		for _, s := range in.List {
-			array := cache.Context().GetMotionsByEveContent(in.Scene, s, in.Value)
+		for _, eve := range in.List {
+			array := cache.Context().GetMotionsByEveContent(in.Scene, eve, in.Value)
 			for _, info := range array {
 				out.Count += info.Count
 			}
 		}
 	} else if in.Field == "events" {
-		for _, s := range in.List {
-			array := cache.Context().GetMotionsByEvent(in.Scene, s)
+		for _, eve := range in.List {
+			array := cache.Context().GetMotionsBySNEvent(in.Scene, in.Value, eve)
 			for _, info := range array {
 				out.Count += info.Count
 			}

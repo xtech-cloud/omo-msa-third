@@ -98,6 +98,25 @@ func GetMotionsByEventID(scene, eve string) ([]*Motion, error) {
 	return items, nil
 }
 
+func GetMotionsBySNEvent(scene, sn, eve string) ([]*Motion, error) {
+	def := new(time.Time)
+	filter := bson.M{"scene": scene, "sn": sn, "event": eve, "deleteAt": def}
+	cursor, err1 := findMany(TableMotion, filter, 0)
+	if err1 != nil {
+		return nil, err1
+	}
+	var items = make([]*Motion, 0, 20)
+	for cursor.Next(context.Background()) {
+		var node = new(Motion)
+		if err := cursor.Decode(node); err != nil {
+			return nil, err
+		} else {
+			items = append(items, node)
+		}
+	}
+	return items, nil
+}
+
 func GetMotionsBySN(scene, sn string) ([]*Motion, error) {
 	def := new(time.Time)
 	filter := bson.M{"scene": scene, "sn": sn, "deleteAt": def}
