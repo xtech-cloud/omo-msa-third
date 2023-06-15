@@ -136,6 +136,8 @@ func (mine *cacheContext) GetMotionsByEveContent(scene, eve, content string) []*
 }
 
 func (mine *MotionInfo) initInfo(db *nosql.Motion) {
+	mine.UID = db.UID.Hex()
+	mine.ID = db.ID
 	mine.CreateTime = db.CreatedTime
 	mine.UpdateTime = db.UpdatedTime
 	mine.Creator = db.Creator

@@ -3,7 +3,6 @@ package cache
 import (
 	"encoding/base64"
 	"encoding/json"
-	"fmt"
 	"github.com/micro/go-micro/v2/logger"
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
@@ -34,7 +33,7 @@ type RecordCount struct {
 }
 
 func CheckAnalyse() {
-	time.Sleep(time.Second * 10)
+	time.Sleep(time.Second * 5)
 	if config.Schema.Analyse.History {
 		logger.Warn("check history events....")
 		start := time.Now().AddDate(0, 0, -30).UnixMilli()
@@ -75,8 +74,14 @@ func (mine *cacheContext) checkOldEvents(start, end int64) {
 			for _, event := range events {
 				arr, err, _ := mine.getOldEvents(device.SN, event, start, end)
 				if err == nil {
-					list := mine.checkCounts(arr, device.Scene, device.SN, event)
-					all = append(all, list...)
+					if len(arr) > 0 {
+						list := mine.checkCounts(arr, device.Scene, device.SN, event)
+						all = append(all, list...)
+					} else {
+						logger.Warn("check old events is empty of sn " + device.SN + " and event = " + event)
+					}
+				} else {
+					logger.Warn("check old events error = " + err.Error())
 				}
 			}
 		}
@@ -141,8 +146,6 @@ func (mine *cacheContext) getOldEvents(sn, event string, start, end int64) ([]*T
 
 	content := result.Get("content").String()
 	bytes, err := base64.StdEncoding.DecodeString(content)
-	msg := string(bytes)
-	fmt.Println(msg)
 	err = json.Unmarshal(bytes, &list)
 	if err != nil {
 		return nil, err, pbstatus.ResultStatus_FormatError
