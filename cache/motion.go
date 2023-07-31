@@ -82,8 +82,8 @@ func (mine *cacheContext) GetMotionsByEvent(scene, id string) []*MotionInfo {
 	return list
 }
 
-func (mine *cacheContext) GetMotionsBySNEvent(scene, sn, id string) []*MotionInfo {
-	dbs, err := nosql.GetMotionsBySNEvent(scene, sn, id)
+func (mine *cacheContext) GetMotionsBySNEvent(scene, sn, event string) []*MotionInfo {
+	dbs, err := nosql.GetMotionsBySNEvent(scene, sn, event)
 	list := make([]*MotionInfo, 0, len(dbs))
 	if err == nil {
 		for _, db := range dbs {
@@ -120,8 +120,8 @@ func (mine *cacheContext) GetMotionsByContent(scene, sn, content string) []*Moti
 	return list
 }
 
-func (mine *cacheContext) GetMotionsByEveContent(scene, eve, content string) []*MotionInfo {
-	dbs, err := nosql.GetMotionsByEventID(scene, eve)
+func (mine *cacheContext) GetMotionsByEveContent(scene, event, content string) []*MotionInfo {
+	dbs, err := nosql.GetMotionsByEventID(scene, event)
 	list := make([]*MotionInfo, 0, len(dbs))
 	if err == nil {
 		for _, db := range dbs {

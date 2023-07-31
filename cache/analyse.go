@@ -61,6 +61,15 @@ func CheckAnalyse() {
 	logger.Info("start cron success that id = " + strconv.Itoa(int(id)) + " and timer = " + config.Schema.Analyse.Timer)
 }
 
+func getRecordCount(sn, event, content string, list []*RecordCount) *RecordCount {
+	for _, item := range list {
+		if item.SN == sn && item.Event == event && item.Content == content {
+			return item
+		}
+	}
+	return nil
+}
+
 func (mine *cacheContext) checkOldEvents(start, end int64) {
 	devices, _ := nosql.GetAllDevices()
 	logger.Warn("start check old events.... device length = " + strconv.Itoa(len(devices)))
@@ -153,11 +162,42 @@ func (mine *cacheContext) getOldEvents(sn, event string, start, end int64) ([]*T
 	return list, nil, pbstatus.ResultStatus_Success
 }
 
-func getRecordCount(sn, event, content string, list []*RecordCount) *RecordCount {
-	for _, item := range list {
-		if item.SN == sn && item.Event == event && item.Content == content {
-			return item
-		}
+func (mine *cacheContext) getEventsBySN(sn string, start, end int64) ([]*TerminalRecord, error, pbstatus.ResultStatus) {
+	list := make([]*TerminalRecord, 0, 10)
+	var reqRecords struct {
+		SN        string `json:"serialNumber"`
+		StartTime int64  `json:"startTime"`
+		EndTime   int64  `json:"endTime"`
 	}
-	return nil
+
+	reqRecords.SN = sn
+	reqRecords.StartTime = start
+	reqRecords.EndTime = end
+	req, er := json.Marshal(reqRecords)
+	if er != nil {
+		return nil, er, pbstatus.ResultStatus_FormatError
+	}
+	result, _, er := PostHttp(config.Schema.Basic.OgmCount, req, false)
+	if er != nil {
+		return nil, er, pbstatus.ResultStatus_ServerError
+	}
+
+	content := result.Get("content").String()
+	bytes, err := base64.StdEncoding.DecodeString(content)
+	err = json.Unmarshal(bytes, &list)
+	if err != nil {
+		return nil, err, pbstatus.ResultStatus_FormatError
+	}
+	return list, nil, pbstatus.ResultStatus_Success
+}
+
+func (mine *cacheContext) GetEventsCount(sn string, utc int64) uint32 {
+	day := time.Unix(utc, 0)
+	from := time.Date(day.Year(), day.Month(), day.Day(), 1, 0, 0, 0, time.UTC)
+	to := time.Date(day.Year(), day.Month(), day.Day(), 23, 0, 0, 0, time.UTC)
+	list, err, _ := mine.getEventsBySN(sn, from.Unix(), to.Unix())
+	if err != nil {
+		return 0
+	}
+	return uint32(len(list))
 }

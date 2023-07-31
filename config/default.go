@@ -49,7 +49,7 @@ const defaultJson string = `{
 				"name": "运行时长",
 				"type": 3,
 				"ids": [
-					"Analytics.Awake"
+					"/XTC/Analytics/Open"
 				]
 			}
 		]

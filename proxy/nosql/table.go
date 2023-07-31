@@ -20,4 +20,7 @@ const (
 
 	TableRecommend = "website_recommends"
 	TableCarousel  = "website_carousels"
+
+	TableTopic   = "topics"
+	TableRecords = "topic_records"
 )

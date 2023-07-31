@@ -133,6 +133,15 @@ func (mine *MotionService) GetStatistic(ctx context.Context, in *pb.RequestFilte
 				out.Count += info.Count
 			}
 		}
+	} else if in.Field == "date" {
+		//获取设备的指定某一天的数据
+		for _, stamp := range in.List {
+			utc, er := strconv.Atoi(stamp)
+			if er == nil {
+				num := cache.Context().GetEventsCount(in.Value, int64(utc))
+				out.Count += num
+			}
+		}
 	}
 	out.Status = outLog(path, out)
 	return nil
