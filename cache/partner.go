@@ -12,13 +12,13 @@ import (
 type PartnerInfo struct {
 	Status uint8
 	baseInfo
-	Phone    string
-	Remark   string
-	Secret   string
-	Tags     []string
+	Phone  string
+	Remark string
+	Secret string
+	Tags   []string
 }
 
-func (mine *cacheContext)CreatePartner(name,remark, phone, creator string, tags []string) (*PartnerInfo, error) {
+func (mine *cacheContext) CreatePartner(name, remark, phone, creator string, tags []string) (*PartnerInfo, error) {
 	db := new(nosql.Partner)
 	db.UID = primitive.NewObjectID()
 	db.ID = nosql.GetPartnerNextID()
@@ -44,7 +44,7 @@ func (mine *cacheContext)CreatePartner(name,remark, phone, creator string, tags 
 	return nil, err
 }
 
-func (mine *cacheContext)RemovePartner(uid, operator string) error {
+func (mine *cacheContext) RemovePartner(uid, operator string) error {
 	if len(uid) < 1 {
 		return errors.New("the uid is empty")
 	}
@@ -52,12 +52,12 @@ func (mine *cacheContext)RemovePartner(uid, operator string) error {
 	return err
 }
 
-func (mine *cacheContext)GetAllPartners() []*PartnerInfo {
+func (mine *cacheContext) GetAllPartners() []*PartnerInfo {
 	list := make([]*PartnerInfo, 0, 10)
-	array,err := nosql.GetPartners()
-	if err == nil{
+	array, err := nosql.GetPartners()
+	if err == nil {
 		for _, db := range array {
-			info:= new(PartnerInfo)
+			info := new(PartnerInfo)
 			info.initInfo(db)
 			list = append(list, info)
 		}
@@ -65,39 +65,39 @@ func (mine *cacheContext)GetAllPartners() []*PartnerInfo {
 	return list
 }
 
-func (mine *cacheContext)GetPartner(uid string) *PartnerInfo {
+func (mine *cacheContext) GetPartner(uid string) *PartnerInfo {
 	if len(uid) < 1 {
 		return nil
 	}
-	db,err := nosql.GetPartner(uid)
-	if err == nil{
-		info:= new(PartnerInfo)
+	db, err := nosql.GetPartner(uid)
+	if err == nil {
+		info := new(PartnerInfo)
 		info.initInfo(db)
 		return info
 	}
 	return nil
 }
 
-func (mine *cacheContext)GetPartnerBySecret(uid string) *PartnerInfo {
+func (mine *cacheContext) GetPartnerBySecret(uid string) *PartnerInfo {
 	if len(uid) < 1 {
 		return nil
 	}
-	db,err := nosql.GetPartnerBySecret(uid)
-	if err == nil{
-		info:= new(PartnerInfo)
+	db, err := nosql.GetPartnerBySecret(uid)
+	if err == nil {
+		info := new(PartnerInfo)
 		info.initInfo(db)
 		return info
 	}
 	return nil
 }
 
-func (mine *PartnerInfo)initInfo(db *nosql.Partner)  {
+func (mine *PartnerInfo) initInfo(db *nosql.Partner) {
 	mine.UID = db.UID.Hex()
 	mine.Remark = db.Remark
 	mine.ID = db.ID
 	mine.Name = db.Name
-	mine.CreateTime = db.CreatedTime
-	mine.UpdateTime = db.UpdatedTime
+	mine.Created = db.Created
+	mine.Updated = db.Updated
 	mine.Creator = db.Creator
 	mine.Operator = db.Operator
 	mine.Phone = db.Phone
@@ -106,11 +106,11 @@ func (mine *PartnerInfo)initInfo(db *nosql.Partner)  {
 	mine.Tags = db.Tags
 }
 
-func (mine *PartnerInfo)UpdateBase(name, remark,operator string) error {
-	if len(name) <1 {
+func (mine *PartnerInfo) UpdateBase(name, remark, operator string) error {
+	if len(name) < 1 {
 		name = mine.Name
 	}
-	if len(remark) <1 {
+	if len(remark) < 1 {
 		remark = mine.Remark
 	}
 	err := nosql.UpdatePartnerBase(mine.UID, name, remark, operator)
@@ -122,7 +122,7 @@ func (mine *PartnerInfo)UpdateBase(name, remark,operator string) error {
 	return err
 }
 
-func (mine *PartnerInfo)UpdateTags(operator string, tags []string) error {
+func (mine *PartnerInfo) UpdateTags(operator string, tags []string) error {
 	err := nosql.UpdatePartnerTags(mine.UID, operator, tags)
 	if err == nil {
 		mine.Tags = tags
@@ -131,7 +131,7 @@ func (mine *PartnerInfo)UpdateTags(operator string, tags []string) error {
 	return err
 }
 
-func (mine *PartnerInfo)UpdateCover(cover, operator string) error {
+func (mine *PartnerInfo) UpdateCover(cover, operator string) error {
 	err := nosql.UpdatePartnerCover(mine.UID, cover, operator)
 	if err == nil {
 		mine.Operator = operator
@@ -139,7 +139,7 @@ func (mine *PartnerInfo)UpdateCover(cover, operator string) error {
 	return err
 }
 
-func (mine *PartnerInfo)CreateSecret(operator string) error {
+func (mine *PartnerInfo) CreateSecret(operator string) error {
 	key := uuid.NewV4().String()
 	md5 := tool.StrMD5(key)
 	err := nosql.UpdatePartnerSecret(mine.UID, md5, operator)

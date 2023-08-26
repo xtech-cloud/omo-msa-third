@@ -2,7 +2,11 @@ package nosql
 
 import (
 	"context"
+	"errors"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"time"
 )
 
@@ -13,6 +17,9 @@ type Invite struct {
 	CreatedTime time.Time          `json:"createdAt" bson:"createdAt"`
 	UpdatedTime time.Time          `json:"updatedAt" bson:"updatedAt"`
 	DeleteTime  time.Time          `json:"deleteAt" bson:"deleteAt"`
+	Created     int64              `json:"created" bson:"created"`
+	Updated     int64              `json:"updated" bson:"updated"`
+	Deleted     int64              `json:"deleted" bson:"deleted"`
 
 	Creator     string `json:"creator" bson:"creator"`
 	Operator    string `json:"operator" bson:"operator"`
@@ -29,7 +36,7 @@ type Invite struct {
 }
 
 func GetAllDevices() ([]*Invite, error) {
-	cursor, err1 := findAll(TableDevice, 0)
+	cursor, err1 := findAllOld(TableDevice, 0)
 	if err1 != nil {
 		return nil, err1
 	}
@@ -43,4 +50,28 @@ func GetAllDevices() ([]*Invite, error) {
 		}
 	}
 	return items, nil
+}
+
+func findAllOld(collection string, limit int64) (*mongo.Cursor, error) {
+	if len(collection) < 1 {
+		return nil, errors.New("the collection is empty")
+	}
+	c := noSql.Collection(collection)
+	if c == nil {
+		return nil, errors.New("can not found the collection of" + collection)
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), timeOut)
+	defer cancel()
+	filter := bson.M{"deleteAt": new(time.Time)}
+	var cursor *mongo.Cursor
+	var err error
+	if limit > 0 {
+		cursor, err = c.Find(ctx, filter, options.Find().SetSort(bson.M{TimeCreated: -1}).SetLimit(limit))
+	} else {
+		cursor, err = c.Find(ctx, filter)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return cursor, nil
 }

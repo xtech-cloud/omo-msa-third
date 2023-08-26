@@ -15,15 +15,18 @@ type Partner struct {
 	CreatedTime time.Time          `json:"createdAt" bson:"createdAt"`
 	UpdatedTime time.Time          `json:"updatedAt" bson:"updatedAt"`
 	DeleteTime  time.Time          `json:"deleteAt" bson:"deleteAt"`
+	Created     int64              `json:"created" bson:"created"`
+	Updated     int64              `json:"updated" bson:"updated"`
+	Deleted     int64              `json:"deleted" bson:"deleted"`
 	Creator     string             `json:"creator" bson:"creator"`
 	Operator    string             `json:"operator" bson:"operator"`
 
-	Status      uint8 `json:"status" bson:"status"`
-	Cover       string             `json:"cover" bson:"cover"`
-	Remark      string             `json:"remark" bson:"remark"`
-	Phone       string 				`json:"phone" bson:"phone"`
-	Secret      string 				`json:"secret" bson:"secret"`
-	Tags        []string 			`json:"tags" bsonL:"tags"`
+	Status uint8    `json:"status" bson:"status"`
+	Cover  string   `json:"cover" bson:"cover"`
+	Remark string   `json:"remark" bson:"remark"`
+	Phone  string   `json:"phone" bson:"phone"`
+	Secret string   `json:"secret" bson:"secret"`
+	Tags   []string `json:"tags" bsonL:"tags"`
 }
 
 func CreatePartner(info *Partner) error {
@@ -37,7 +40,7 @@ func GetPartnerNextID() uint64 {
 }
 
 func GetPartners() ([]*Partner, error) {
-	cursor, err1 := findAll(TablePartner, 0)
+	cursor, err1 := findAllEnable(TablePartner, 0)
 	if err1 != nil {
 		return nil, err1
 	}
@@ -82,7 +85,7 @@ func GetPartnerBySecret(secret string) (*Partner, error) {
 	if len(secret) < 2 {
 		return nil, errors.New("db partner uid is empty of GetPartnerBySecret")
 	}
-	msg := bson.M{"secret": secret, "deleteAt": new(time.Time)}
+	msg := bson.M{"secret": secret, TimeDeleted: 0}
 	result, err := findOneBy(TablePartner, msg)
 	if err != nil {
 		return nil, err
@@ -101,26 +104,25 @@ func GetPartnerCount() int64 {
 }
 
 func UpdatePartnerBase(uid, name, remark, operator string) error {
-	msg := bson.M{"name": name, "remark": remark, "operator": operator, "updatedAt": time.Now()}
+	msg := bson.M{"name": name, "remark": remark, "operator": operator, TimeUpdated: time.Now().Unix()}
 	_, err := updateOne(TablePartner, uid, msg)
 	return err
 }
 
 func UpdatePartnerCover(uid, cover, operator string) error {
-	msg := bson.M{"cover": cover, "operator":operator, "updatedAt": time.Now()}
+	msg := bson.M{"cover": cover, "operator": operator, TimeUpdated: time.Now().Unix()}
 	_, err := updateOne(TablePartner, uid, msg)
 	return err
 }
 
 func UpdatePartnerSecret(uid, secret, operator string) error {
-	msg := bson.M{"secret": secret, "operator":operator, "updatedAt": time.Now()}
+	msg := bson.M{"secret": secret, "operator": operator, TimeUpdated: time.Now().Unix()}
 	_, err := updateOne(TablePartner, uid, msg)
 	return err
 }
 
 func UpdatePartnerTags(uid, operator string, tags []string) error {
-	msg := bson.M{"tags": tags, "operator":operator, "updatedAt": time.Now()}
+	msg := bson.M{"tags": tags, "operator": operator, TimeUpdated: time.Now().Unix()}
 	_, err := updateOne(TablePartner, uid, msg)
 	return err
 }
-

@@ -15,13 +15,16 @@ type Channel struct {
 	CreatedTime time.Time          `json:"createdAt" bson:"createdAt"`
 	UpdatedTime time.Time          `json:"updatedAt" bson:"updatedAt"`
 	DeleteTime  time.Time          `json:"deleteAt" bson:"deleteAt"`
+	Created     int64              `json:"created" bson:"created"`
+	Updated     int64              `json:"updated" bson:"updated"`
+	Deleted     int64              `json:"deleted" bson:"deleted"`
 	Creator     string             `json:"creator" bson:"creator"`
 	Operator    string             `json:"operator" bson:"operator"`
 
-	Remark      string             `json:"remark" bson:"remark"`
-	Owner       string             `json:"owner" bson:"owner"`
-	Type        uint8              `json:"type" bson:"type"`
-	Bags      []string `json:"bags" bson:"bags"`
+	Remark string   `json:"remark" bson:"remark"`
+	Owner  string   `json:"owner" bson:"owner"`
+	Type   uint8    `json:"type" bson:"type"`
+	Bags   []string `json:"bags" bson:"bags"`
 }
 
 func CreateChannel(info *Channel) error {
@@ -40,7 +43,7 @@ func GetChannelCount() int64 {
 }
 
 func GetChannels() ([]*Channel, error) {
-	cursor, err1 := findAll(TableChannel, 0)
+	cursor, err1 := findAllEnable(TableChannel, 0)
 	if err1 != nil {
 		return nil, err1
 	}
@@ -82,8 +85,7 @@ func GetChannel(uid string) (*Channel, error) {
 }
 
 func GetChannelByOwner(owner string) (*Channel, error) {
-	def := new(time.Time)
-	filter := bson.M{"owner": owner, "deleteAt": def}
+	filter := bson.M{"owner": owner, TimeDeleted: 0}
 	result, err := findOneBy(TableChannel, filter)
 	if err != nil {
 		return nil, err
@@ -97,13 +99,13 @@ func GetChannelByOwner(owner string) (*Channel, error) {
 }
 
 func UpdateChannelBase(uid, name, remark, operator string) error {
-	msg := bson.M{"name": name, "remark": remark, "operator": operator, "updatedAt": time.Now()}
+	msg := bson.M{"name": name, "remark": remark, "operator": operator, TimeUpdated: time.Now().Unix()}
 	_, err := updateOne(TableChannel, uid, msg)
 	return err
 }
 
 func UpdateChannelBags(uid, operator string, list []string) error {
-	msg := bson.M{"bags": list, "operator":operator, "updatedAt": time.Now()}
+	msg := bson.M{"bags": list, "operator": operator, TimeUpdated: time.Now().Unix()}
 	_, err := updateOne(TableChannel, uid, msg)
 	return err
 }

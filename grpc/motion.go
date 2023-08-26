@@ -17,8 +17,8 @@ func switchMotion(info *cache.MotionInfo) *pb.MotionInfo {
 	tmp.Uid = info.UID
 	tmp.Id = info.ID
 	tmp.Name = info.Name
-	tmp.Updated = info.UpdateTime.Unix()
-	tmp.Created = info.CreateTime.Unix()
+	tmp.Updated = info.Updated
+	tmp.Created = info.Created
 	tmp.Creator = info.Creator
 	tmp.Count = info.Count
 	tmp.Sn = info.SN
@@ -134,13 +134,25 @@ func (mine *MotionService) GetStatistic(ctx context.Context, in *pb.RequestFilte
 			}
 		}
 	} else if in.Field == "date" {
-		//获取设备的指定某一天的数据
-		for _, stamp := range in.List {
-			utc, er := strconv.Atoi(stamp)
-			if er == nil {
-				num := cache.Context().GetEventsCount(in.Value, int64(utc))
-				out.Count += num
-			}
+		//获取设备的指定一个时间段的数据
+		out.List = make([]*pb.PairInfo, 0, len(in.List))
+		out.Count, out.List = cache.Context().GetEventsByList(in.Value, in.List)
+
+	} else if in.Field == "week" {
+		//获取设备的最近周的数据
+		out.List = make([]*pb.PairInfo, 0, len(in.List))
+		for _, eve := range in.List {
+			num := cache.Context().GetWeekCount(in.Value, eve)
+			out.List = append(out.List, &pb.PairInfo{Key: eve, Count: num})
+			out.Count += num
+		}
+	} else if in.Field == "month" {
+		//获取设备的最近月的数据
+		out.List = make([]*pb.PairInfo, 0, len(in.List))
+		for _, eve := range in.List {
+			num := cache.Context().GetMouthCount(in.Value, eve)
+			out.List = append(out.List, &pb.PairInfo{Key: eve, Count: num})
+			out.Count += num
 		}
 	}
 	out.Status = outLog(path, out)

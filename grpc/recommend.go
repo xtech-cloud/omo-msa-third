@@ -16,8 +16,8 @@ func switchRecommend(info *cache.RecommendInfo) *pb.RecommendInfo {
 	tmp.Uid = info.UID
 	tmp.Id = info.ID
 	tmp.Name = info.Name
-	tmp.Updated = info.UpdateTime.Unix()
-	tmp.Created = info.CreateTime.Unix()
+	tmp.Updated = info.Updated
+	tmp.Created = info.Created
 	tmp.Creator = info.Creator
 	tmp.Type = uint32(info.Type)
 	tmp.Targets = info.Targets

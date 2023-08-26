@@ -15,6 +15,9 @@ type Recommend struct {
 	CreatedTime time.Time          `json:"createdAt" bson:"createdAt"`
 	UpdatedTime time.Time          `json:"updatedAt" bson:"updatedAt"`
 	DeleteTime  time.Time          `json:"deleteAt" bson:"deleteAt"`
+	Created     int64              `json:"created" bson:"created"`
+	Updated     int64              `json:"updated" bson:"updated"`
+	Deleted     int64              `json:"deleted" bson:"deleted"`
 	Creator     string             `json:"creator" bson:"creator"`
 	Operator    string             `json:"operator" bson:"operator"`
 
@@ -67,8 +70,7 @@ func GetRecommendBy(owner string, tp uint8) (*Recommend, error) {
 	if len(owner) < 2 {
 		return nil, errors.New("db owner is empty of GetRecommendBy")
 	}
-	def := new(time.Time)
-	filter := bson.M{"owner": owner, "type": tp, "deleteAt": def}
+	filter := bson.M{"owner": owner, "type": tp, TimeDeleted: 0}
 	result, err := findOneBy(TableRecommend, filter)
 	if err != nil {
 		return nil, err
@@ -84,8 +86,7 @@ func GetRecommendByT(owner string) (*Recommend, error) {
 	if len(owner) < 2 {
 		return nil, errors.New("db owner is empty of GetRecommendBy")
 	}
-	def := new(time.Time)
-	filter := bson.M{"owner": owner, "deleteAt": def}
+	filter := bson.M{"owner": owner, TimeDeleted: 0}
 	result, err := findOneBy(TableRecommend, filter)
 	if err != nil {
 		return nil, err
@@ -98,8 +99,7 @@ func GetRecommendByT(owner string) (*Recommend, error) {
 	return model, nil
 }
 func GetRecommendByOwner(owner string) ([]*Recommend, error) {
-	def := new(time.Time)
-	filter := bson.M{"owner": owner, "deleteAt": def}
+	filter := bson.M{"owner": owner, TimeDeleted: 0}
 	cursor, err1 := findMany(TableRecommend, filter, 0)
 	if err1 != nil {
 		return nil, err1
@@ -116,8 +116,7 @@ func GetRecommendByOwner(owner string) ([]*Recommend, error) {
 	return items, nil
 }
 func GetRecommendsByType(owner string, tp uint32) ([]*Recommend, error) {
-	def := new(time.Time)
-	filter := bson.M{"owner": owner, "type": tp, "deleteAt": def}
+	filter := bson.M{"owner": owner, "type": tp, TimeDeleted: 0}
 	cursor, err1 := findMany(TableRecommend, filter, 0)
 	if err1 != nil {
 		return nil, err1
@@ -135,13 +134,13 @@ func GetRecommendsByType(owner string, tp uint32) ([]*Recommend, error) {
 }
 
 func UpdateRecommendBase(uid, name, sub, body, operator string) error {
-	msg := bson.M{"name": name, "body": body, "subtitle": sub, "operator": operator, "updatedAt": time.Now()}
+	msg := bson.M{"name": name, "body": body, "subtitle": sub, "operator": operator, TimeUpdated: time.Now().Unix()}
 	_, err := updateOne(TableRecommend, uid, msg)
 	return err
 }
 
 func UpdateRecommendTargets(uid, operator string, list []string) error {
-	msg := bson.M{"targets": list, "operator": operator, "updatedAt": time.Now()}
+	msg := bson.M{"targets": list, "operator": operator, TimeUpdated: time.Now().Unix()}
 	_, err := updateOne(TableRecommend, uid, msg)
 	return err
 }

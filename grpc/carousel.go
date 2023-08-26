@@ -16,8 +16,8 @@ func switchCarouse(info *cache.CarouselInfo) *pb.CarouselInfo {
 	tmp.Uid = info.UID
 	tmp.Id = info.ID
 	tmp.Name = info.Name
-	tmp.Updated = info.UpdateTime.Unix()
-	tmp.Created = info.CreateTime.Unix()
+	tmp.Updated = info.Updated
+	tmp.Created = info.Created
 	tmp.Creator = info.Creator
 	tmp.Owner = info.Owner
 	tmp.Quotes = make([]*pb.QuoteInfo, 0, len(info.Quotes))

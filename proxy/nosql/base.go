@@ -86,6 +86,34 @@ func InitDB(ip string, port string, db string, kind string) error {
 	}
 }
 
+func CheckTimes() {
+	dbs := make([]*Carousel, 0, 100)
+	dbs = GetAll(TableCarousel, dbs)
+	for _, db := range dbs {
+		UpdateItemTime(TableCarousel, db.UID.Hex(), db.CreatedTime, db.UpdatedTime, db.DeleteTime)
+	}
+	dbs1 := make([]*Channel, 0, 100)
+	dbs1 = GetAll(TableChannel, dbs1)
+	for _, db := range dbs1 {
+		UpdateItemTime(TableChannel, db.UID.Hex(), db.CreatedTime, db.UpdatedTime, db.DeleteTime)
+	}
+	dbs2 := make([]*Motion, 0, 100)
+	dbs2 = GetAll(TableMotion, dbs2)
+	for _, db := range dbs2 {
+		UpdateItemTime(TableMotion, db.UID.Hex(), db.CreatedTime, db.UpdatedTime, db.DeleteTime)
+	}
+	dbs3 := make([]*Partner, 0, 100)
+	dbs3 = GetAll(TablePartner, dbs3)
+	for _, db := range dbs3 {
+		UpdateItemTime(TablePartner, db.UID.Hex(), db.CreatedTime, db.UpdatedTime, db.DeleteTime)
+	}
+	dbs4 := make([]*Recommend, 0, 100)
+	dbs4 = GetAll(TableRecommend, dbs4)
+	for _, db := range dbs4 {
+		UpdateItemTime(TableRecommend, db.UID.Hex(), db.CreatedTime, db.UpdatedTime, db.DeleteTime)
+	}
+}
+
 func tableExist(collection string) bool {
 	c := noSql.Collection(collection)
 	if c == nil {

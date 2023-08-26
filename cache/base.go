@@ -14,21 +14,19 @@ import (
 	"omo.msa.third/config"
 	"omo.msa.third/proxy/nosql"
 	"os"
-	"time"
 )
 
 type baseInfo struct {
-	ID         uint64 `json:"-"`
-	UID        string `json:"uid"`
-	Name       string `json:"name"`
-	Creator    string
-	Operator   string
-	CreateTime time.Time
-	UpdateTime time.Time
+	ID       uint64 `json:"-"`
+	UID      string `json:"uid"`
+	Name     string `json:"name"`
+	Creator  string
+	Operator string
+	Created  int64
+	Updated  int64
 }
 
 type cacheContext struct {
-	//boxes []*OwnerInfo
 }
 
 var cacheCtx *cacheContext
@@ -41,6 +39,7 @@ func InitData() error {
 		num := nosql.GetPartnerCount()
 		count := nosql.GetChannelCount()
 		logger.Infof("the partner count = %d and the channel count = %d", num, count)
+		nosql.CheckTimes()
 	}
 	return err
 }
@@ -106,4 +105,30 @@ func PostHttp(address string, bts []byte, more bool) (*gjson.Result, int, error)
 		return nil, int(errCode), errors.New(errMsg)
 	}
 	return &result, 0, nil
+}
+
+func CheckPage[T any](page, number uint32, all []T) (uint32, uint32, []T) {
+	if len(all) < 1 {
+		return 0, 0, make([]T, 0, 1)
+	}
+	if number < 1 {
+		number = 10
+	}
+	total := uint32(len(all))
+	if len(all) <= int(number) {
+		return total, 1, all
+	}
+	maxPage := total/number + 1
+	if page < 1 {
+		return total, maxPage, all
+	}
+
+	var start = (page - 1) * number
+	var end = start + number
+	if end > total {
+		end = total
+	}
+	list := make([]T, 0, number)
+	list = append(all[start:end])
+	return total, maxPage, list
 }

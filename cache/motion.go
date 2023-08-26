@@ -138,8 +138,8 @@ func (mine *cacheContext) GetMotionsByEveContent(scene, event, content string) [
 func (mine *MotionInfo) initInfo(db *nosql.Motion) {
 	mine.UID = db.UID.Hex()
 	mine.ID = db.ID
-	mine.CreateTime = db.CreatedTime
-	mine.UpdateTime = db.UpdatedTime
+	mine.Created = db.Created
+	mine.Updated = db.Updated
 	mine.Creator = db.Creator
 	mine.Operator = db.Operator
 	mine.Name = db.Name
@@ -156,7 +156,7 @@ func (mine *MotionInfo) AddCount(offset uint32, operator string) error {
 	err := nosql.UpdateMotionCount(mine.UID, operator, mine.Count+offset)
 	if err == nil {
 		mine.Count = mine.Count + offset
-		mine.UpdateTime = time.Now()
+		mine.Updated = time.Now().Unix()
 	}
 	return err
 }

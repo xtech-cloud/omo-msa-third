@@ -7,6 +7,7 @@ import (
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
 	pbstatus "github.com/xtech-cloud/omo-msp-status/proto/status"
+	pb "github.com/xtech-cloud/omo-msp-third/proto/third"
 	"omo.msa.third/config"
 	"omo.msa.third/proxy/nosql"
 	"strconv"
@@ -50,8 +51,8 @@ func CheckAnalyse() {
 	})
 	cli := cron.New(cron.WithChain(cron.SkipIfStillRunning(loger)))
 	id, er := cli.AddFunc(config.Schema.Analyse.Timer, func() {
-		from := time.Now().AddDate(0, 0, config.Schema.Analyse.Days).UnixMilli()
-		cacheCtx.checkOldEvents(from, time.Now().UnixMilli())
+		from := time.Now().AddDate(0, 0, config.Schema.Analyse.Days)
+		cacheCtx.checkOldEvents(from.UnixMilli(), time.Now().UnixMilli())
 	})
 	if er != nil {
 		logger.Warn("start cron failed that err = " + er.Error())
@@ -102,7 +103,7 @@ func (mine *cacheContext) checkOldEvents(start, end int64) {
 			_, _ = mine.CreateMotion(item.Scene, "", item.SN, item.Event, item.Content, "", item.Count)
 		} else {
 			_ = motion.AddCount(item.Count, "")
-			if motion.UpdateTime.UnixMilli() > item.Timestamp {
+			if motion.Updated > item.Timestamp {
 
 			}
 		}
@@ -191,13 +192,91 @@ func (mine *cacheContext) getEventsBySN(sn string, start, end int64) ([]*Termina
 	return list, nil, pbstatus.ResultStatus_Success
 }
 
+func (mine *cacheContext) GetWeekCount(sn, event string) uint32 {
+	day := time.Now()
+	weekDay := day.Weekday()
+	from := time.Now().AddDate(0, 0, -int(weekDay))
+	to := time.Date(day.Year(), day.Month(), day.Day(), 23, 0, 0, 0, time.UTC)
+	dbs, _, _ := mine.getOldEvents(sn, event, from.UnixMilli(), to.UnixMilli())
+	return uint32(len(dbs))
+}
+
+func (mine *cacheContext) GetMouthCount(sn, event string) uint32 {
+	day := time.Now()
+	from := time.Date(day.Year(), day.Month(), 1, 1, 0, 0, 0, time.UTC)
+	to := time.Date(day.Year(), day.Month(), day.Day(), 24, 0, 0, 0, time.UTC)
+	dbs, _, _ := mine.getOldEvents(sn, event, from.UnixMilli(), to.UnixMilli())
+	return uint32(len(dbs))
+}
+
 func (mine *cacheContext) GetEventsCount(sn string, utc int64) uint32 {
 	day := time.Unix(utc, 0)
 	from := time.Date(day.Year(), day.Month(), day.Day(), 1, 0, 0, 0, time.UTC)
-	to := time.Date(day.Year(), day.Month(), day.Day(), 23, 0, 0, 0, time.UTC)
-	list, err, _ := mine.getEventsBySN(sn, from.Unix(), to.Unix())
+	to := time.Date(day.Year(), day.Month(), day.Day(), 24, 0, 0, 0, time.UTC)
+	list, err, _ := mine.getEventsBySN(sn, from.UnixMilli(), to.UnixMilli())
 	if err != nil {
 		return 0
 	}
 	return uint32(len(list))
+}
+
+func (mine *cacheContext) GetEventsByList(sn string, arr []string) (uint32, []*pb.PairInfo) {
+	var from time.Time
+	var to time.Time
+	length := len(arr)
+	pairs := make([]*pb.PairInfo, 0, length)
+	var count uint32 = 0
+	if length < 1 {
+		return 0, nil
+	} else if length == 1 {
+		utc, er := strconv.Atoi(arr[0])
+		if er != nil {
+			return 0, nil
+		}
+		day := time.Unix(int64(utc), 0)
+		from = time.Date(day.Year(), day.Month(), day.Day(), 1, 0, 0, 0, time.UTC)
+		to = time.Date(day.Year(), day.Month(), day.Day(), 24, 0, 0, 0, time.UTC)
+		list, _, _ := mine.getEventsBySN(sn, from.UnixMilli(), to.UnixMilli())
+		pairs = append(pairs, &pb.PairInfo{Id: uint32(utc), Key: arr[0], Count: uint32(len(list))})
+	} else {
+		utc1, er := strconv.Atoi(arr[0])
+		if er != nil {
+			return 0, nil
+		}
+		day1 := time.Unix(int64(utc1), 0)
+		utc2, er := strconv.Atoi(arr[length-1])
+		if er != nil {
+			return 0, nil
+		}
+		day2 := time.Unix(int64(utc2), 0)
+		from = time.Date(day1.Year(), day1.Month(), day1.Day(), 0, 0, 0, 0, time.UTC)
+		to = time.Date(day2.Year(), day2.Month(), day2.Day(), 23, 59, 59, 0, time.UTC)
+		list, er, _ := mine.getEventsBySN(sn, from.UnixMilli(), to.UnixMilli())
+		if er == nil {
+			for _, s := range arr {
+				num := getCountInList(list, s)
+				utc, _ := strconv.Atoi(s)
+				pairs = append(pairs, &pb.PairInfo{Id: uint32(utc), Key: s, Count: num})
+				count += num
+			}
+		}
+	}
+	return count, pairs
+}
+
+func getCountInList(list []*TerminalRecord, stamp string) uint32 {
+	utc, er := strconv.Atoi(stamp)
+	if er != nil {
+		return 0
+	}
+	day := time.Unix(int64(utc), 0)
+	from := time.Date(day.Year(), day.Month(), day.Day(), 1, 0, 0, 0, time.UTC)
+	to := time.Date(day.Year(), day.Month(), day.Day(), 24, 0, 0, 0, time.UTC)
+	var count uint32 = 0
+	for _, record := range list {
+		if record.Timestamp > from.UnixMilli() && record.Timestamp < to.UnixMilli() {
+			count += 1
+		}
+	}
+	return count
 }

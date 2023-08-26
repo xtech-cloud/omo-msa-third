@@ -43,6 +43,8 @@ func main() {
 	_ = proto.RegisterCarouselServiceHandler(service.Server(), new(grpc.CarouselService))
 	_ = proto.RegisterRecommendServiceHandler(service.Server(), new(grpc.RecommendService))
 	_ = proto.RegisterTopicServiceHandler(service.Server(), new(grpc.TopicService))
+	_ = proto.RegisterScheduleServiceHandler(service.Server(), new(grpc.ScheduleService))
+	_ = proto.RegisterHolidayServiceHandler(service.Server(), new(grpc.HolidayService))
 
 	app, _ := filepath.Abs(os.Args[0])
 

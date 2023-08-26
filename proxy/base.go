@@ -10,3 +10,8 @@ type TopicResult struct {
 	Count   uint32 `json:"count" bson:"count"`
 	State   uint32 `json:"state" bson:"state"`
 }
+
+type DurationInfo struct {
+	Begin int64 `json:"begin" bson:"begin"`
+	End   int64 `json:"end" bson:"end"`
+}

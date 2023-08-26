@@ -15,6 +15,9 @@ type Motion struct {
 	CreatedTime time.Time          `json:"createdAt" bson:"createdAt"`
 	UpdatedTime time.Time          `json:"updatedAt" bson:"updatedAt"`
 	DeleteTime  time.Time          `json:"deleteAt" bson:"deleteAt"`
+	Created     int64              `json:"created" bson:"created"`
+	Updated     int64              `json:"updated" bson:"updated"`
+	Deleted     int64              `json:"deleted" bson:"deleted"`
 	Creator     string             `json:"creator" bson:"creator"`
 	Operator    string             `json:"operator" bson:"operator"`
 
@@ -38,7 +41,7 @@ func GetMotionNextID() uint64 {
 }
 
 func GetMotions() ([]*Motion, error) {
-	cursor, err1 := findAll(TableMotion, 0)
+	cursor, err1 := findAllEnable(TableMotion, 0)
 	if err1 != nil {
 		return nil, err1
 	}
@@ -80,8 +83,7 @@ func GetMotion(uid string) (*Motion, error) {
 }
 
 func GetMotionsByEventID(scene, eve string) ([]*Motion, error) {
-	def := new(time.Time)
-	filter := bson.M{"scene": scene, "event": eve, "deleteAt": def}
+	filter := bson.M{"scene": scene, "event": eve, TimeDeleted: 0}
 	cursor, err1 := findMany(TableMotion, filter, 0)
 	if err1 != nil {
 		return nil, err1
@@ -99,8 +101,7 @@ func GetMotionsByEventID(scene, eve string) ([]*Motion, error) {
 }
 
 func GetMotionsBySNEvent(scene, sn, eve string) ([]*Motion, error) {
-	def := new(time.Time)
-	filter := bson.M{"scene": scene, "sn": sn, "event": eve, "deleteAt": def}
+	filter := bson.M{"scene": scene, "sn": sn, "event": eve, TimeDeleted: 0}
 	cursor, err1 := findMany(TableMotion, filter, 0)
 	if err1 != nil {
 		return nil, err1
@@ -118,8 +119,7 @@ func GetMotionsBySNEvent(scene, sn, eve string) ([]*Motion, error) {
 }
 
 func GetMotionsBySN(scene, sn string) ([]*Motion, error) {
-	def := new(time.Time)
-	filter := bson.M{"scene": scene, "sn": sn, "deleteAt": def}
+	filter := bson.M{"scene": scene, "sn": sn, TimeDeleted: 0}
 	cursor, err1 := findMany(TableMotion, filter, 0)
 	if err1 != nil {
 		return nil, err1
@@ -137,8 +137,7 @@ func GetMotionsBySN(scene, sn string) ([]*Motion, error) {
 }
 
 func GetMotionsBy(scene, sn, event, content string) ([]*Motion, error) {
-	def := new(time.Time)
-	filter := bson.M{"scene": scene, "sn": sn, "event": event, "content": content, "deleteAt": def}
+	filter := bson.M{"scene": scene, "sn": sn, "event": event, "content": content, TimeDeleted: 0}
 	cursor, err1 := findMany(TableMotion, filter, 0)
 	if err1 != nil {
 		return nil, err1
@@ -156,8 +155,7 @@ func GetMotionsBy(scene, sn, event, content string) ([]*Motion, error) {
 }
 
 func GetMotionBy(scene, sn, event, content string) (*Motion, error) {
-	def := new(time.Time)
-	filter := bson.M{"scene": scene, "sn": sn, "event": event, "content": content, "deleteAt": def}
+	filter := bson.M{"scene": scene, "sn": sn, "event": event, "content": content, TimeDeleted: 0}
 	result, err := findOneBy(TableMotion, filter)
 	if err != nil {
 		return nil, err
@@ -171,8 +169,7 @@ func GetMotionBy(scene, sn, event, content string) (*Motion, error) {
 }
 
 func GetMotionsByContent(scene, sn, content string) ([]*Motion, error) {
-	def := new(time.Time)
-	filter := bson.M{"scene": scene, "sn": sn, "content": content, "deleteAt": def}
+	filter := bson.M{"scene": scene, "sn": sn, "content": content, TimeDeleted: 0}
 	cursor, err1 := findMany(TableMotion, filter, 0)
 	if err1 != nil {
 		return nil, err1
@@ -190,8 +187,7 @@ func GetMotionsByContent(scene, sn, content string) ([]*Motion, error) {
 }
 
 func GetMotionsByEventContent(scene, event, content string) ([]*Motion, error) {
-	def := new(time.Time)
-	filter := bson.M{"scene": scene, "event": event, "content": content, "deleteAt": def}
+	filter := bson.M{"scene": scene, "event": event, "content": content, TimeDeleted: 0}
 	cursor, err1 := findMany(TableMotion, filter, 0)
 	if err1 != nil {
 		return nil, err1
@@ -214,7 +210,7 @@ func GetMotionCount() int64 {
 }
 
 func UpdateMotionCount(uid, operator string, num uint32) error {
-	msg := bson.M{"count": num, "operator": operator, "updatedAt": time.Now()}
+	msg := bson.M{"count": num, "operator": operator, TimeUpdated: time.Now().Unix()}
 	_, err := updateOne(TableMotion, uid, msg)
 	return err
 }

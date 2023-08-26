@@ -9,14 +9,14 @@ import (
 )
 
 type Topic struct {
-	UID         primitive.ObjectID `bson:"_id"`
-	ID          uint64             `json:"id" bson:"id"`
-	Name        string             `json:"name" bson:"name"`
-	CreatedTime time.Time          `json:"createdAt" bson:"createdAt"`
-	UpdatedTime time.Time          `json:"updatedAt" bson:"updatedAt"`
-	DeleteTime  time.Time          `json:"deleteAt" bson:"deleteAt"`
-	Creator     string             `json:"creator" bson:"creator"`
-	Operator    string             `json:"operator" bson:"operator"`
+	UID      primitive.ObjectID `bson:"_id"`
+	ID       uint64             `json:"id" bson:"id"`
+	Name     string             `json:"name" bson:"name"`
+	Created  int64              `json:"created" bson:"created"`
+	Updated  int64              `json:"updated" bson:"updated"`
+	Deleted  int64              `json:"deleted" bson:"deleted"`
+	Creator  string             `json:"creator" bson:"creator"`
+	Operator string             `json:"operator" bson:"operator"`
 
 	Scene   string `json:"scene" bson:"scene"`
 	Compere string `json:"compere" bson:"compere"` //主持人
@@ -35,7 +35,7 @@ func GetTopicNextID() uint64 {
 }
 
 func GetTopics() ([]*Topic, error) {
-	cursor, err1 := findAll(TableTopic, 0)
+	cursor, err1 := findAllEnable(TableTopic, 0)
 	if err1 != nil {
 		return nil, err1
 	}
@@ -77,8 +77,7 @@ func GetTopic(uid string) (*Topic, error) {
 }
 
 func GetTopicsByScene(scene string) ([]*Topic, error) {
-	def := new(time.Time)
-	filter := bson.M{"scene": scene, "deleteAt": def}
+	filter := bson.M{"scene": scene, TimeDeleted: 0}
 	cursor, err1 := findMany(TableTopic, filter, 0)
 	if err1 != nil {
 		return nil, err1
@@ -101,13 +100,13 @@ func GetTopicCount() int64 {
 }
 
 func UpdateTopicBase(uid, name, remark, compere, operator string, secs uint32) error {
-	msg := bson.M{"name": name, "remark": remark, "compere": compere, "time": secs, "operator": operator, "updatedAt": time.Now()}
+	msg := bson.M{"name": name, "remark": remark, "compere": compere, "time": secs, "operator": operator, TimeUpdated: time.Now().Unix()}
 	_, err := updateOne(TableTopic, uid, msg)
 	return err
 }
 
 func UpdateTopicTitle(uid, name, operator string) error {
-	msg := bson.M{"name": name, "operator": operator, "updatedAt": time.Now()}
+	msg := bson.M{"name": name, "operator": operator, TimeUpdated: time.Now().Unix()}
 	_, err := updateOne(TableTopic, uid, msg)
 	return err
 }

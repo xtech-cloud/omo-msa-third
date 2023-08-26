@@ -18,8 +18,8 @@ func switchPartner(info *cache.PartnerInfo) *pb.PartnerInfo {
 	tmp.Id = info.ID
 	tmp.Name = info.Name
 	tmp.Remark = info.Remark
-	tmp.Updated = info.UpdateTime.Unix()
-	tmp.Created = info.CreateTime.Unix()
+	tmp.Updated = info.Updated
+	tmp.Created = info.Created
 	tmp.Creator = info.Creator
 	tmp.Operator = info.Operator
 	tmp.Tags = info.Tags

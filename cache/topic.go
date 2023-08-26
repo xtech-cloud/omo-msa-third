@@ -19,10 +19,10 @@ func (mine *cacheContext) CreateTopic(scene, name, remark, compere, operator str
 	db := new(nosql.Topic)
 	db.UID = primitive.NewObjectID()
 	db.ID = nosql.GetTopicNextID()
-	db.CreatedTime = time.Now()
+	db.Created = time.Now().Unix()
 	db.Creator = operator
 	db.Operator = operator
-	db.UpdatedTime = time.Now()
+	db.Updated = time.Now().Unix()
 	db.Scene = scene
 	db.Name = name
 	db.Remark = remark
@@ -76,8 +76,8 @@ func (mine *cacheContext) GetTopicsByScene(scene string) []*TopicInfo {
 func (mine *TopicInfo) initInfo(db *nosql.Topic) {
 	mine.UID = db.UID.Hex()
 	mine.ID = db.ID
-	mine.CreateTime = db.CreatedTime
-	mine.UpdateTime = db.UpdatedTime
+	mine.Created = db.Created
+	mine.Updated = db.Updated
 	mine.Creator = db.Creator
 	mine.Operator = db.Operator
 	mine.Name = db.Name
@@ -95,7 +95,7 @@ func (mine *TopicInfo) UpdateBase(name, remark, compere, operator string, secs u
 		mine.Compere = compere
 		mine.Operator = operator
 		mine.Time = secs
-		mine.UpdateTime = time.Now()
+		mine.Updated = time.Now().Unix()
 	}
 	return err
 }
@@ -105,7 +105,7 @@ func (mine *TopicInfo) UpdateTitle(name, operator string) error {
 	if err == nil {
 		mine.Name = name
 		mine.Operator = operator
-		mine.UpdateTime = time.Now()
+		mine.Updated = time.Now().Unix()
 	}
 	return err
 }
@@ -114,10 +114,10 @@ func (mine *TopicInfo) CreateRecord(sn, operator string, st uint32, date int64, 
 	db := new(nosql.TopicRecord)
 	db.UID = primitive.NewObjectID()
 	db.ID = nosql.GetTopicNextID()
-	db.CreatedTime = time.Now()
+	db.Created = time.Now().Unix()
 	db.Creator = operator
 	db.Operator = operator
-	db.UpdatedTime = time.Now()
+	db.Updated = time.Now().Unix()
 	db.Scene = mine.Scene
 	db.Compere = mine.Compere
 	db.Name = mine.Name

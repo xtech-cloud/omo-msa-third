@@ -15,6 +15,9 @@ type Carousel struct {
 	CreatedTime time.Time          `json:"createdAt" bson:"createdAt"`
 	UpdatedTime time.Time          `json:"updatedAt" bson:"updatedAt"`
 	DeleteTime  time.Time          `json:"deleteAt" bson:"deleteAt"`
+	Created     int64              `json:"created" bson:"created"`
+	Updated     int64              `json:"updated" bson:"updated"`
+	Deleted     int64              `json:"deleted" bson:"deleted"`
 	Creator     string             `json:"creator" bson:"creator"`
 	Operator    string             `json:"operator" bson:"operator"`
 
@@ -69,8 +72,7 @@ func GetCarouselBy(owner string) (*Carousel, error) {
 	if len(owner) < 2 {
 		return nil, errors.New("db owner is empty of GetCarouselBy")
 	}
-	def := new(time.Time)
-	filter := bson.M{"owner": owner, "deleteAt": def}
+	filter := bson.M{"owner": owner, TimeDeleted: 0}
 	result, err := findOneBy(TableCarousel, filter)
 	if err != nil {
 		return nil, err
@@ -89,8 +91,7 @@ func GetCarouselCount() int64 {
 }
 
 func GetCarouselsByOwner(owner string) ([]*Carousel, error) {
-	def := new(time.Time)
-	filter := bson.M{"owner": owner, "deleteAt": def}
+	filter := bson.M{"owner": owner, TimeDeleted: 0}
 	cursor, err1 := findMany(TableCarousel, filter, 0)
 	if err1 != nil {
 		return nil, err1
@@ -108,13 +109,13 @@ func GetCarouselsByOwner(owner string) ([]*Carousel, error) {
 }
 
 func UpdateCarouselStatus(uid, operator string, st uint8) error {
-	msg := bson.M{"status": st, "operator": operator, "updatedAt": time.Now()}
+	msg := bson.M{"status": st, "operator": operator, TimeUpdated: time.Now().Unix()}
 	_, err := updateOne(TableCarousel, uid, msg)
 	return err
 }
 
 func UpdateCarouselTargets(uid, operator string, list []*QuoteInfo) error {
-	msg := bson.M{"quotes": list, "operator": operator, "updatedAt": time.Now()}
+	msg := bson.M{"quotes": list, "operator": operator, TimeUpdated: time.Now().Unix()}
 	_, err := updateOne(TableCarousel, uid, msg)
 	return err
 }

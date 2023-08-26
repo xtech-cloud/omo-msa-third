@@ -81,8 +81,8 @@ func (mine *RecommendInfo) initInfo(db *nosql.Recommend) {
 	mine.UID = db.UID.Hex()
 	mine.ID = db.ID
 	mine.Name = db.Name
-	mine.CreateTime = db.CreatedTime
-	mine.UpdateTime = db.UpdatedTime
+	mine.Created = db.Created
+	mine.Updated = db.Updated
 	mine.Creator = db.Creator
 	mine.Operator = db.Operator
 	mine.Owner = db.Owner

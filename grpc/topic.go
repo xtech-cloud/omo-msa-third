@@ -18,8 +18,8 @@ func switchTopic(info *cache.TopicInfo) *pb.TopicInfo {
 	tmp.Uid = info.UID
 	tmp.Id = info.ID
 	tmp.Name = info.Name
-	tmp.Updated = info.UpdateTime.Unix()
-	tmp.Created = info.CreateTime.Unix()
+	tmp.Updated = info.Updated
+	tmp.Created = info.Created
 	tmp.Creator = info.Creator
 	tmp.Remark = info.Remark
 	tmp.Time = info.Time
@@ -32,7 +32,7 @@ func switchTopicRecord(info *nosql.TopicRecord) *pb.TopicRecord {
 	tmp := new(pb.TopicRecord)
 	tmp.Uid = info.UID.Hex()
 	tmp.Id = info.ID
-	tmp.Created = info.CreatedTime.Unix()
+	tmp.Created = info.Created
 	tmp.Operator = info.Creator
 	tmp.Topic = info.Topic
 	tmp.Date = info.Date
