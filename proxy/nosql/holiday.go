@@ -77,6 +77,23 @@ func GetHoliday(uid string) (*Holiday, error) {
 	return model, nil
 }
 
+func GetHolidayByFrom(owner string, from int64) (*Holiday, error) {
+	if len(owner) < 2 {
+		return nil, errors.New("db Holiday uid is empty of GetHoliday")
+	}
+	filter := bson.M{"owner": owner, "from": from, TimeDeleted: 0}
+	result, err := findOneBy(TableHoliday, filter)
+	if err != nil {
+		return nil, err
+	}
+	model := new(Holiday)
+	err1 := result.Decode(&model)
+	if err1 != nil {
+		return nil, err1
+	}
+	return model, nil
+}
+
 func GetHolidaysByOwner(owner string) ([]*Holiday, error) {
 	filter := bson.M{"owner": owner, TimeDeleted: 0}
 	cursor, err1 := findMany(TableHoliday, filter, 0)

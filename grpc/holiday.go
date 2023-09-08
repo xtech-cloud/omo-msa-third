@@ -10,6 +10,11 @@ import (
 	"strconv"
 )
 
+const (
+	HolidayNormal   = 0
+	HolidayOfficial = 1
+)
+
 type HolidayService struct{}
 
 func switchHoliday(info *cache.HolidayInfo) *pb.HolidayInfo {
@@ -33,7 +38,14 @@ func (mine *HolidayService) AddOne(ctx context.Context, in *pb.ReqHolidayAdd, ou
 	path := "schedule.addOne"
 	inLog(path, in)
 
-	info, err := cache.Context().CreateHoliday(in)
+	var info *cache.HolidayInfo
+	var err error
+	if in.Type == HolidayOfficial {
+		info = cache.Context().GetOfficialHoliday(in.Owner, in.From)
+	}
+	if info == nil {
+		info, err = cache.Context().CreateHoliday(in)
+	}
 	if err != nil {
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
 		return nil

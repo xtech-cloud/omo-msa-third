@@ -1,8 +1,11 @@
 package cache
 
 import (
+	"github.com/tidwall/gjson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"omo.msa.third/proxy/nosql"
+	"omo.msa.third/tool"
+	"sort"
 	"strings"
 	"time"
 )
@@ -15,7 +18,9 @@ type MotionInfo struct {
 	SN      string
 	UserID  string
 	EventID string
-	Content string
+	meta    string
+	content string
+	bundle  string
 }
 
 func (mine *cacheContext) CreateMotion(scene, app, sn, eveID, content, operator string, count uint32) (*MotionInfo, error) {
@@ -120,6 +125,55 @@ func (mine *cacheContext) GetMotionsByContent(scene, sn, content string) []*Moti
 	return list
 }
 
+func (mine *cacheContext) GetRanksByBundle(scene string, num uint32, events []string) []*MotionInfo {
+	dbs, err := nosql.GetMotionsByOwner(scene)
+	list := make([]*MotionInfo, 0, len(dbs))
+	if err == nil {
+		for _, db := range dbs {
+			if tool.HasItem(events, db.EventID) && len(db.Content) > 2 {
+				info := new(MotionInfo)
+				info.initInfo(db)
+				bundle := getMotionInfo(info.bundle, list)
+				if bundle != nil {
+					bundle.Count += info.Count
+				} else {
+					list = append(list, info)
+				}
+			}
+		}
+	}
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].Count > list[i].Count
+	})
+	if len(list) > int(num) {
+		return list[:num]
+	} else {
+		return list
+	}
+}
+
+func (mine *cacheContext) GetRanksByContent(scene string, num uint32, events []string) []*MotionInfo {
+	dbs, err := nosql.GetMotionsByOwner(scene)
+	list := make([]*MotionInfo, 0, len(dbs))
+	if err == nil {
+		for _, db := range dbs {
+			if tool.HasItem(events, db.EventID) && len(db.Content) > 2 {
+				info := new(MotionInfo)
+				info.initInfo(db)
+				list = append(list, info)
+			}
+		}
+	}
+	sort.Slice(list, func(i, j int) bool {
+		return list[i].Count > list[i].Count
+	})
+	if len(list) > int(num) {
+		return list[:num]
+	} else {
+		return list
+	}
+}
+
 func (mine *cacheContext) GetMotionsByEveContent(scene, event, content string) []*MotionInfo {
 	dbs, err := nosql.GetMotionsByEventID(scene, event)
 	list := make([]*MotionInfo, 0, len(dbs))
@@ -133,6 +187,15 @@ func (mine *cacheContext) GetMotionsByEveContent(scene, event, content string) [
 		}
 	}
 	return list
+}
+
+func getMotionInfo(bundle string, list []*MotionInfo) *MotionInfo {
+	for _, info := range list {
+		if info.bundle == bundle {
+			return info
+		}
+	}
+	return nil
 }
 
 func (mine *MotionInfo) initInfo(db *nosql.Motion) {
@@ -149,7 +212,17 @@ func (mine *MotionInfo) initInfo(db *nosql.Motion) {
 	mine.AppID = db.AppID
 	mine.Count = db.Count
 	mine.UserID = db.UserID
-	mine.Content = db.Content
+	mine.meta = db.Content
+
+	if len(mine.meta) > 2 && gjson.Valid(mine.meta) {
+		result := gjson.Parse(mine.meta)
+		uri := result.Get("uri").String()
+		if strings.Contains(uri, "/") {
+			arr := strings.Split(uri, "/")
+			mine.bundle = arr[0]
+			mine.content = arr[1]
+		}
+	}
 }
 
 func (mine *MotionInfo) AddCount(offset uint32, operator string) error {
@@ -159,4 +232,16 @@ func (mine *MotionInfo) AddCount(offset uint32, operator string) error {
 		mine.Updated = time.Now().Unix()
 	}
 	return err
+}
+
+func (mine *MotionInfo) Bundle() string {
+	return mine.bundle
+}
+
+func (mine *MotionInfo) Content() string {
+	return mine.content
+}
+
+func (mine *MotionInfo) Meta() string {
+	return mine.meta
 }

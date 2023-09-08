@@ -22,7 +22,7 @@ func switchMotion(info *cache.MotionInfo) *pb.MotionInfo {
 	tmp.Creator = info.Creator
 	tmp.Count = info.Count
 	tmp.Sn = info.SN
-	tmp.Content = info.Content
+	tmp.Content = info.Meta()
 	tmp.Event = info.EventID
 	tmp.App = info.AppID
 	tmp.Scene = info.Scene
@@ -98,6 +98,10 @@ func (mine *MotionService) GetByFilter(ctx context.Context, in *pb.RequestFilter
 		if len(in.List) > 1 {
 			array = cache.Context().GetMotionsByContent(in.Scene, in.List[0], in.List[1])
 		}
+	} else if in.Field == "rank_display" {
+		array = cache.Context().GetRanksByBundle(in.Scene, in.Number, in.List)
+	} else if in.Field == "rank_content" {
+		array = cache.Context().GetRanksByContent(in.Scene, in.Number, in.List)
 	} else {
 
 	}

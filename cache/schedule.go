@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+const OneDay int64 = 24 * 3600
+
 type ScheduleInfo struct {
 	Status uint8
 	Type   uint8
@@ -41,7 +43,9 @@ func (mine *cacheContext) CreateSchedule(in *pb.ReqScheduleAdd) (*ScheduleInfo, 
 	db.Quote = in.Quote
 	db.Color = in.Color
 	db.Ignore = uint8(in.Ignore)
-	db.Date = proxy.DurationInfo{Begin: in.Date.Begin, End: in.Date.End}
+	from := in.Date.Begin
+	end := in.Date.End
+	db.Date = proxy.DurationInfo{Begin: from, End: end}
 	db.Time = proxy.DurationInfo{Begin: in.Time.Begin, End: in.Time.End}
 	db.Targets = in.Targets
 	db.Weekdays = in.Weekdays
@@ -97,11 +101,11 @@ func (mine *cacheContext) GetNowSchedule(owner, area string) *ScheduleInfo {
 	dbs, err := nosql.GetSchedulesByOwner(owner)
 	if err == nil {
 		now := time.Now()
-		utc := now.Unix()
+		utc := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local).Unix()
 		t := int64(now.Hour()*3600 + now.Minute()*60 + now.Second())
 		for _, db := range dbs {
-			if tool.HasItem(db.Targets, area) && utc > db.Date.Begin && utc < db.Date.End {
-				if t > db.Time.Begin && t < db.Time.End {
+			if tool.HasItem(db.Targets, area) && utc >= db.Date.Begin && utc <= db.Date.End {
+				if t >= db.Time.Begin && t <= db.Time.End {
 					info := new(ScheduleInfo)
 					info.initInfo(db)
 					return info
@@ -117,9 +121,14 @@ func (mine *cacheContext) GetTodaySchedules(owner string) []*ScheduleInfo {
 	list := make([]*ScheduleInfo, 0, len(dbs))
 	if err == nil {
 		now := time.Now()
-		utc := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local).Unix()
+		utc := now.Unix()
 		for _, db := range dbs {
-			if utc >= db.Date.Begin && utc <= db.Date.End {
+			from := db.Date.Begin
+			end := db.Date.End
+			if from == end {
+				end += OneDay
+			}
+			if utc >= from && utc <= end {
 				info := new(ScheduleInfo)
 				info.initInfo(db)
 				list = append(list, info)

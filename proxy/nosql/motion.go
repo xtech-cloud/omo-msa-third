@@ -136,6 +136,24 @@ func GetMotionsBySN(scene, sn string) ([]*Motion, error) {
 	return items, nil
 }
 
+func GetMotionsByOwner(scene string) ([]*Motion, error) {
+	filter := bson.M{"scene": scene, TimeDeleted: 0}
+	cursor, err1 := findMany(TableMotion, filter, 0)
+	if err1 != nil {
+		return nil, err1
+	}
+	var items = make([]*Motion, 0, 20)
+	for cursor.Next(context.Background()) {
+		var node = new(Motion)
+		if err := cursor.Decode(node); err != nil {
+			return nil, err
+		} else {
+			items = append(items, node)
+		}
+	}
+	return items, nil
+}
+
 func GetMotionsBy(scene, sn, event, content string) ([]*Motion, error) {
 	filter := bson.M{"scene": scene, "sn": sn, "event": event, "content": content, TimeDeleted: 0}
 	cursor, err1 := findMany(TableMotion, filter, 0)

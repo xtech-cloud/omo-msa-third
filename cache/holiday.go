@@ -74,6 +74,19 @@ func (mine *cacheContext) GetHoliday(uid string) (*HolidayInfo, error) {
 	return nil, err
 }
 
+func (mine *cacheContext) GetOfficialHoliday(owner string, from int64) *HolidayInfo {
+	if len(owner) < 1 {
+		return nil
+	}
+	db, err := nosql.GetHolidayByFrom(owner, from)
+	if err != nil {
+		return nil
+	}
+	info := new(HolidayInfo)
+	info.initInfo(db)
+	return info
+}
+
 func (mine *cacheContext) GetHolidayByOwner(uid string) []*HolidayInfo {
 	if len(uid) < 1 {
 		return nil
