@@ -25,4 +25,5 @@ const (
 	TableRecords  = "topic_records"
 	TableSchedule = "schedules"
 	TableHoliday  = "holidays"
+	TableNetflow  = "netflow"
 )

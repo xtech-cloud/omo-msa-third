@@ -15,3 +15,11 @@ type DurationInfo struct {
 	Begin int64 `json:"begin" bson:"begin"`
 	End   int64 `json:"end" bson:"end"`
 }
+
+type ContentInfo struct {
+	UID      string   `json:"uid" bson:"uid"`
+	Size     uint64   `json:"size" bson:"size"`
+	Group    string   `json:"group" bson:"group"`
+	Type     uint8    `json:"type" bson:"type"`
+	Children []string `json:"children" bson:"children"`
+}

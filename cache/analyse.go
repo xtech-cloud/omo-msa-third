@@ -220,12 +220,12 @@ func (mine *cacheContext) GetEventsCount(sn string, utc int64) uint32 {
 	return uint32(len(list))
 }
 
-func (mine *cacheContext) GetEventsByList(sn string, arr []string) (uint32, []*pb.PairInfo) {
+func (mine *cacheContext) GetEventsByList(sn string, arr []string) (uint64, []*pb.PairInfo) {
 	var from time.Time
 	var to time.Time
 	length := len(arr)
 	pairs := make([]*pb.PairInfo, 0, length)
-	var count uint32 = 0
+	var count uint64 = 0
 	if length < 1 {
 		return 0, nil
 	} else if length == 1 {
@@ -237,7 +237,7 @@ func (mine *cacheContext) GetEventsByList(sn string, arr []string) (uint32, []*p
 		from = time.Date(day.Year(), day.Month(), day.Day(), 1, 0, 0, 0, time.UTC)
 		to = time.Date(day.Year(), day.Month(), day.Day(), 24, 0, 0, 0, time.UTC)
 		list, _, _ := mine.getEventsBySN(sn, from.UnixMilli(), to.UnixMilli())
-		pairs = append(pairs, &pb.PairInfo{Id: uint32(utc), Key: arr[0], Count: uint32(len(list))})
+		pairs = append(pairs, &pb.PairInfo{Id: uint64(utc), Key: arr[0], Count: uint64(len(list))})
 	} else {
 		utc1, er := strconv.Atoi(arr[0])
 		if er != nil {
@@ -256,8 +256,8 @@ func (mine *cacheContext) GetEventsByList(sn string, arr []string) (uint32, []*p
 			for _, s := range arr {
 				num := getCountInList(list, s)
 				utc, _ := strconv.Atoi(s)
-				pairs = append(pairs, &pb.PairInfo{Id: uint32(utc), Key: s, Count: num})
-				count += num
+				pairs = append(pairs, &pb.PairInfo{Id: uint64(utc), Key: s, Count: uint64(num)})
+				count += uint64(num)
 			}
 		}
 	}

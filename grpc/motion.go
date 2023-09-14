@@ -121,20 +121,20 @@ func (mine *MotionService) GetStatistic(ctx context.Context, in *pb.RequestFilte
 	if in.Field == "count" {
 		if len(in.List) > 2 {
 			item := cache.Context().GetMotionBy(in.Scene, in.List[0], in.List[1], in.List[2])
-			out.Count = item.Count
+			out.Count = uint64(item.Count)
 		}
 	} else if in.Field == "content" {
 		for _, eve := range in.List {
 			array := cache.Context().GetMotionsByEveContent(in.Scene, eve, in.Value)
 			for _, info := range array {
-				out.Count += info.Count
+				out.Count += uint64(info.Count)
 			}
 		}
 	} else if in.Field == "events" {
 		for _, eve := range in.List {
 			array := cache.Context().GetMotionsBySNEvent(in.Scene, in.Value, eve)
 			for _, info := range array {
-				out.Count += info.Count
+				out.Count += uint64(info.Count)
 			}
 		}
 	} else if in.Field == "date" {
@@ -147,16 +147,16 @@ func (mine *MotionService) GetStatistic(ctx context.Context, in *pb.RequestFilte
 		out.List = make([]*pb.PairInfo, 0, len(in.List))
 		for _, eve := range in.List {
 			num := cache.Context().GetWeekCount(in.Value, eve)
-			out.List = append(out.List, &pb.PairInfo{Key: eve, Count: num})
-			out.Count += num
+			out.List = append(out.List, &pb.PairInfo{Key: eve, Count: uint64(num)})
+			out.Count += uint64(num)
 		}
 	} else if in.Field == "month" {
 		//获取设备的最近月的数据
 		out.List = make([]*pb.PairInfo, 0, len(in.List))
 		for _, eve := range in.List {
 			num := cache.Context().GetMouthCount(in.Value, eve)
-			out.List = append(out.List, &pb.PairInfo{Key: eve, Count: num})
-			out.Count += num
+			out.List = append(out.List, &pb.PairInfo{Key: eve, Count: uint64(num)})
+			out.Count += uint64(num)
 		}
 	}
 	out.Status = outLog(path, out)

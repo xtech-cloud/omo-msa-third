@@ -45,6 +45,7 @@ func main() {
 	_ = proto.RegisterTopicServiceHandler(service.Server(), new(grpc.TopicService))
 	_ = proto.RegisterScheduleServiceHandler(service.Server(), new(grpc.ScheduleService))
 	_ = proto.RegisterHolidayServiceHandler(service.Server(), new(grpc.HolidayService))
+	_ = proto.RegisterNetflowServiceHandler(service.Server(), new(grpc.NetflowService))
 
 	app, _ := filepath.Abs(os.Args[0])
 
