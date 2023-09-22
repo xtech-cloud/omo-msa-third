@@ -95,6 +95,24 @@ func GetNetflowsByOwner(owner string) ([]*Netflow, error) {
 	return items, nil
 }
 
+func GetNetflowsByDuration(owner string, from, to int64) ([]*Netflow, error) {
+	filter := bson.M{"owner": owner, TimeCreated: bson.M{"$gte": from, "$lte": to}}
+	cursor, err1 := findMany(TableNetflow, filter, 0)
+	if err1 != nil {
+		return nil, err1
+	}
+	var items = make([]*Netflow, 0, 20)
+	for cursor.Next(context.Background()) {
+		var node = new(Netflow)
+		if err := cursor.Decode(&node); err != nil {
+			return nil, err
+		} else {
+			items = append(items, node)
+		}
+	}
+	return items, nil
+}
+
 func GetNetflowCount() int64 {
 	num, _ := getCount(TableNetflow)
 	return num

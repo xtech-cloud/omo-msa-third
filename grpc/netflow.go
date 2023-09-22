@@ -87,7 +87,9 @@ func (mine *NetflowService) GetByFilter(ctx context.Context, in *pb.RequestFilte
 	path := "netflow.getByFilter"
 	inLog(path, in)
 	var array []*cache.NetflowInfo
-	if in.Field == "" {
+	if in.Field == "latest" {
+		array, _ = cache.Context().GetNetflowByLatest(in.Scene, int(in.Number))
+	} else {
 		array, _ = cache.Context().GetNetflowByScene(in.Scene)
 	}
 	out.List = make([]*pb.NetflowInfo, 0, len(array))
@@ -109,6 +111,10 @@ func (mine *NetflowService) GetStatistic(ctx context.Context, in *pb.RequestFilt
 			size += info.Size
 		}
 		out.Count = size
+	} else if in.Field == "stamps" {
+		out.Count, out.List = cache.Context().GetNetflowByStamps(in.Value, in.List)
+	} else if in.Field == "today" {
+		out.Count, out.List = cache.Context().GetNetflowByStamps(in.Value, in.List)
 	}
 	out.Status = outLog(path, out)
 	return nil
