@@ -112,9 +112,9 @@ func (mine *NetflowService) GetStatistic(ctx context.Context, in *pb.RequestFilt
 		}
 		out.Count = size
 	} else if in.Field == "stamps" {
-		out.Count, out.List = cache.Context().GetNetflowByStamps(in.Value, in.List)
+		out.Count, out.List = cache.Context().GetNetflowByStamps(in.Scene, in.List)
 	} else if in.Field == "today" {
-		out.Count, out.List = cache.Context().GetNetflowByStamps(in.Value, in.List)
+		out.Count, out.List = cache.Context().GetNetflowByStamps(in.Scene, in.List)
 	}
 	out.Status = outLog(path, out)
 	return nil

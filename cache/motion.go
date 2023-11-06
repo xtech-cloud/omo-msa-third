@@ -143,7 +143,7 @@ func (mine *cacheContext) GetRanksByBundle(scene string, num uint32, events []st
 		}
 	}
 	sort.Slice(list, func(i, j int) bool {
-		return list[i].Count > list[i].Count
+		return list[i].Count > list[j].Count
 	})
 	if len(list) > int(num) {
 		return list[:num]
@@ -165,7 +165,7 @@ func (mine *cacheContext) GetRanksByContent(scene string, num uint32, events []s
 		}
 	}
 	sort.Slice(list, func(i, j int) bool {
-		return list[i].Count > list[i].Count
+		return list[i].Count > list[j].Count
 	})
 	if len(list) > int(num) {
 		return list[:num]

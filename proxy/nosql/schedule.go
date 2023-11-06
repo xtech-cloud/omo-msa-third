@@ -119,6 +119,24 @@ func GetSchedulesByOwner(owner string) ([]*Schedule, error) {
 	return items, nil
 }
 
+func GetSchedulesByOwnerDate(owner string, stamp int64) ([]*Schedule, error) {
+	filter := bson.M{"owner": owner, "status": 0, "date.begin": bson.M{"$lte": stamp}, "date.end": bson.M{"$gte": stamp}, TimeDeleted: 0}
+	cursor, err1 := findMany(TableSchedule, filter, 0)
+	if err1 != nil {
+		return nil, err1
+	}
+	var items = make([]*Schedule, 0, 20)
+	for cursor.Next(context.Background()) {
+		var node = new(Schedule)
+		if err := cursor.Decode(&node); err != nil {
+			return nil, err
+		} else {
+			items = append(items, node)
+		}
+	}
+	return items, nil
+}
+
 func GetScheduleCount() int64 {
 	num, _ := getCount(TableSchedule)
 	return num

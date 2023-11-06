@@ -39,7 +39,7 @@ func InitData() error {
 		num := nosql.GetPartnerCount()
 		count := nosql.GetChannelCount()
 		logger.Infof("the partner count = %d and the channel count = %d", num, count)
-		nosql.CheckTimes()
+		//nosql.CheckTimes()
 	}
 	return err
 }

@@ -12,6 +12,11 @@ import (
 
 const OneDay int64 = 24 * 3600
 
+const (
+	ScheduleOpen  = 0
+	ScheduleClose = 1
+)
+
 type ScheduleInfo struct {
 	Status uint8
 	Type   uint8
@@ -117,22 +122,15 @@ func (mine *cacheContext) GetNowSchedule(owner, area string) *ScheduleInfo {
 }
 
 func (mine *cacheContext) GetTodaySchedules(owner string) []*ScheduleInfo {
-	dbs, err := nosql.GetSchedulesByOwner(owner)
+	now := time.Now()
+	utc := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local).Unix()
+	dbs, err := nosql.GetSchedulesByOwnerDate(owner, utc)
 	list := make([]*ScheduleInfo, 0, len(dbs))
 	if err == nil {
-		now := time.Now()
-		utc := now.Unix()
 		for _, db := range dbs {
-			from := db.Date.Begin
-			end := db.Date.End
-			if from == end {
-				end += OneDay
-			}
-			if utc >= from && utc <= end {
-				info := new(ScheduleInfo)
-				info.initInfo(db)
-				list = append(list, info)
-			}
+			info := new(ScheduleInfo)
+			info.initInfo(db)
+			list = append(list, info)
 		}
 	}
 	return list
