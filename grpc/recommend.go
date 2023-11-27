@@ -21,6 +21,7 @@ func switchRecommend(info *cache.RecommendInfo) *pb.RecommendInfo {
 	tmp.Creator = info.Creator
 	tmp.Type = uint32(info.Type)
 	tmp.Targets = info.Targets
+	tmp.Quote = info.Quote
 	tmp.Owner = info.Owner
 	return tmp
 }
@@ -29,7 +30,7 @@ func (mine *RecommendService) AddOne(ctx context.Context, in *pb.ReqRecommendAdd
 	path := "recommend.addOne"
 	inLog(path, in)
 
-	info, err := cache.Context().CreateRecommend(in.Owner, in.Operator, uint8(in.Type), in.Targets)
+	info, err := cache.Context().CreateRecommend(in.Owner, in.Quote, in.Operator, uint8(in.Type), in.Targets)
 	if err != nil {
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
@@ -64,7 +65,7 @@ func (mine *RecommendService) UpdateOne(ctx context.Context, in *pb.ReqRecommend
 		return nil
 	}
 
-	info, err := cache.Context().GetRecommend(in.Uid, uint8(in.Type))
+	info, err := cache.Context().GetRecommendByUID(in.Uid)
 	if err != nil {
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_NotExisted)
 		return nil
@@ -102,7 +103,23 @@ func (mine *RecommendService) GetByFilter(ctx context.Context, in *pb.RequestFil
 	var array []*cache.RecommendInfo
 	var max uint32 = 0
 	var pages uint32 = 0
-
+	var err error
+	if in.Field == "quote" {
+		array, err = cache.Context().GetRecommendsByQuote(in.Value)
+	} else if in.Field == "type" {
+		tp, er := strconv.Atoi(in.Value)
+		if er != nil {
+			out.Status = outError(path, er.Error(), pbstatus.ResultStatus_DBException)
+			return nil
+		}
+		array, err = cache.Context().GetRecommendsByType(in.Scene, uint32(tp))
+	} else if in.Field == "owner_quote" {
+		array, err = cache.Context().GetRecommendOwnerQuote(in.Scene, in.Value)
+	}
+	if err != nil {
+		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
+		return nil
+	}
 	out.List = make([]*pb.RecommendInfo, 0, len(array))
 	for _, val := range array {
 		out.List = append(out.List, switchRecommend(val))
@@ -119,7 +136,7 @@ func (mine *RecommendService) GetList(ctx context.Context, in *pb.RequestPage, o
 	var array []*cache.RecommendInfo
 	var max uint32 = 0
 	var pages uint32 = 0
-	array, err := cache.Context().GetRecommendBy(in.Owner)
+	array, err := cache.Context().GetRecommendByOwner(in.Owner)
 	if err != nil {
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
 		return nil

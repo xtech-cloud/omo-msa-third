@@ -12,7 +12,6 @@ const (
 	SourceEntity   SourceType = 1
 	SourceArticle  SourceType = 2
 	SourcePhoto    SourceType = 3
-	SourceCourse   SourceType = 4
 )
 
 type SourceType uint8
@@ -20,11 +19,12 @@ type SourceType uint8
 type RecommendInfo struct {
 	Type uint8
 	baseInfo
-	Owner   string
+	Owner   string //所属组织或者场景
+	Quote   string //引用实体
 	Targets []string
 }
 
-func (mine *cacheContext) CreateRecommend(owner, operator string, tp uint8, list []string) (*RecommendInfo, error) {
+func (mine *cacheContext) CreateRecommend(owner, quote, operator string, tp uint8, list []string) (*RecommendInfo, error) {
 	db := new(nosql.Recommend)
 	db.UID = primitive.NewObjectID()
 	db.ID = nosql.GetRecommendNextID()
@@ -34,6 +34,7 @@ func (mine *cacheContext) CreateRecommend(owner, operator string, tp uint8, list
 	db.Creator = operator
 	db.Owner = owner
 	db.Targets = list
+	db.Quote = quote
 	if db.Targets == nil {
 		db.Targets = make([]string, 0, 1)
 	}
@@ -56,11 +57,70 @@ func (mine *cacheContext) GetRecommend(owner string, tp uint8) (*RecommendInfo, 
 	return info, nil
 }
 
-func (mine *cacheContext) GetRecommendBy(owner string) ([]*RecommendInfo, error) {
+func (mine *cacheContext) GetRecommendByUID(uid string) (*RecommendInfo, error) {
+	db, err := nosql.GetRecommend(uid)
+	if err != nil {
+		return nil, err
+	}
+	info := new(RecommendInfo)
+	info.initInfo(db)
+	return info, nil
+}
+
+func (mine *cacheContext) GetRecommendOwnerQuote(owner, quote string) ([]*RecommendInfo, error) {
+	dbs, err := nosql.GetRecommendByOwnerQuote(owner, quote)
+	if err != nil {
+		return nil, err
+	}
+	list := make([]*RecommendInfo, 0, len(dbs))
+	for _, db := range dbs {
+		info := new(RecommendInfo)
+		info.initInfo(db)
+		list = append(list, info)
+	}
+
+	return list, nil
+}
+
+func (mine *cacheContext) GetRecommendByOwner(owner string) ([]*RecommendInfo, error) {
 	if owner == "" {
 		return nil, errors.New("the owner is empty")
 	}
 	dbs, err := nosql.GetRecommendByOwner(owner)
+	if err != nil {
+		return nil, err
+	}
+	list := make([]*RecommendInfo, 0, len(dbs))
+	for _, db := range dbs {
+		info := new(RecommendInfo)
+		info.initInfo(db)
+		list = append(list, info)
+	}
+	return list, nil
+}
+
+func (mine *cacheContext) GetRecommendsByQuote(quote string) ([]*RecommendInfo, error) {
+	if quote == "" {
+		return nil, errors.New("the quote is empty")
+	}
+	dbs, err := nosql.GetRecommendsByQuote(quote)
+	if err != nil {
+		return nil, err
+	}
+	list := make([]*RecommendInfo, 0, len(dbs))
+	for _, db := range dbs {
+		info := new(RecommendInfo)
+		info.initInfo(db)
+		list = append(list, info)
+	}
+	return list, nil
+}
+
+func (mine *cacheContext) GetRecommendsByType(owner string, tp uint32) ([]*RecommendInfo, error) {
+	if owner == "" {
+		return nil, errors.New("the owner is empty")
+	}
+	dbs, err := nosql.GetRecommendsByType(owner, tp)
 	if err != nil {
 		return nil, err
 	}
@@ -87,6 +147,7 @@ func (mine *RecommendInfo) initInfo(db *nosql.Recommend) {
 	mine.Operator = db.Operator
 	mine.Owner = db.Owner
 	mine.Type = db.Type
+	mine.Quote = db.Quote
 	mine.Targets = db.Targets
 }
 

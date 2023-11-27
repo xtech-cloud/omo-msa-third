@@ -23,6 +23,7 @@ type Recommend struct {
 
 	Type  uint8  `json:"type" bson:"type"`
 	Owner string `json:"owner" bson:"owner"`
+	Quote string `json:"quote" bson:"quote"`
 
 	Targets []string `json:"targets" bson:"targets"`
 }
@@ -82,6 +83,43 @@ func GetRecommendBy(owner string, tp uint8) (*Recommend, error) {
 	}
 	return model, nil
 }
+
+func GetRecommendByOwnerQuote(owner, quote string) ([]*Recommend, error) {
+	filter := bson.M{"owner": owner, "quote": quote, TimeDeleted: 0}
+	cursor, err1 := findMany(TableRecommend, filter, 0)
+	if err1 != nil {
+		return nil, err1
+	}
+	var items = make([]*Recommend, 0, 20)
+	for cursor.Next(context.Background()) {
+		var node = new(Recommend)
+		if err := cursor.Decode(&node); err != nil {
+			return nil, err
+		} else {
+			items = append(items, node)
+		}
+	}
+	return items, nil
+}
+
+func GetRecommendsByQuote(quote string) ([]*Recommend, error) {
+	filter := bson.M{"quote": quote, TimeDeleted: 0}
+	cursor, err1 := findMany(TableRecommend, filter, 0)
+	if err1 != nil {
+		return nil, err1
+	}
+	var items = make([]*Recommend, 0, 20)
+	for cursor.Next(context.Background()) {
+		var node = new(Recommend)
+		if err := cursor.Decode(&node); err != nil {
+			return nil, err
+		} else {
+			items = append(items, node)
+		}
+	}
+	return items, nil
+}
+
 func GetRecommendByT(owner string) (*Recommend, error) {
 	if len(owner) < 2 {
 		return nil, errors.New("db owner is empty of GetRecommendBy")
