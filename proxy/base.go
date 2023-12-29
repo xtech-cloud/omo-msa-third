@@ -23,3 +23,9 @@ type ContentInfo struct {
 	Type     uint8    `json:"type" bson:"type"`
 	Children []string `json:"children" bson:"children"`
 }
+
+type HonorContent struct {
+	Name   string   `json:"name" bson:"name"`
+	Remark string   `json:"remark" bson:"remark"`
+	Quotes []string `json:"quotes" bson:"quotes"`
+}

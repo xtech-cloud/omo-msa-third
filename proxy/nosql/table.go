@@ -21,7 +21,7 @@ const (
 	TableRecommend = "website_recommends"
 	TableCarousel  = "website_carousels"
 
-	TableTopic    = "topics"
+	TableHonor    = "honors"
 	TableRecords  = "topic_records"
 	TableSchedule = "schedules"
 	TableHoliday  = "holidays"

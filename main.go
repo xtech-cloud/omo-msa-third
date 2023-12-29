@@ -42,7 +42,7 @@ func main() {
 	_ = proto.RegisterMotionServiceHandler(service.Server(), new(grpc.MotionService))
 	_ = proto.RegisterCarouselServiceHandler(service.Server(), new(grpc.CarouselService))
 	_ = proto.RegisterRecommendServiceHandler(service.Server(), new(grpc.RecommendService))
-	_ = proto.RegisterTopicServiceHandler(service.Server(), new(grpc.TopicService))
+	_ = proto.RegisterHonorServiceHandler(service.Server(), new(grpc.HonorService))
 	_ = proto.RegisterScheduleServiceHandler(service.Server(), new(grpc.ScheduleService))
 	_ = proto.RegisterHolidayServiceHandler(service.Server(), new(grpc.HolidayService))
 	_ = proto.RegisterNetflowServiceHandler(service.Server(), new(grpc.NetflowService))
