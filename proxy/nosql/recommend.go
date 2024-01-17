@@ -102,6 +102,24 @@ func GetRecommendByOwnerQuote(owner, quote string) ([]*Recommend, error) {
 	return items, nil
 }
 
+func GetRecommendByOwnerTarget(owner, target string) ([]*Recommend, error) {
+	filter := bson.M{"owner": owner, "targets": target, TimeDeleted: 0}
+	cursor, err1 := findMany(TableRecommend, filter, 0)
+	if err1 != nil {
+		return nil, err1
+	}
+	var items = make([]*Recommend, 0, 20)
+	for cursor.Next(context.Background()) {
+		var node = new(Recommend)
+		if err := cursor.Decode(&node); err != nil {
+			return nil, err
+		} else {
+			items = append(items, node)
+		}
+	}
+	return items, nil
+}
+
 func GetRecommendsByQuote(quote string) ([]*Recommend, error) {
 	filter := bson.M{"quote": quote, TimeDeleted: 0}
 	cursor, err1 := findMany(TableRecommend, filter, 0)

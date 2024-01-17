@@ -115,6 +115,8 @@ func (mine *RecommendService) GetByFilter(ctx context.Context, in *pb.RequestFil
 		array, err = cache.Context().GetRecommendsByType(in.Scene, uint32(tp))
 	} else if in.Field == "owner_quote" {
 		array, err = cache.Context().GetRecommendOwnerQuote(in.Scene, in.Value)
+	} else if in.Field == "owner_target" {
+		array, err = cache.Context().GetRecommendOwnerTarget(in.Scene, in.Value)
 	}
 	if err != nil {
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)

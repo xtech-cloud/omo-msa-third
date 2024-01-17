@@ -82,6 +82,21 @@ func (mine *cacheContext) GetRecommendOwnerQuote(owner, quote string) ([]*Recomm
 	return list, nil
 }
 
+func (mine *cacheContext) GetRecommendOwnerTarget(owner, target string) ([]*RecommendInfo, error) {
+	dbs, err := nosql.GetRecommendByOwnerTarget(owner, target)
+	if err != nil {
+		return nil, err
+	}
+	list := make([]*RecommendInfo, 0, len(dbs))
+	for _, db := range dbs {
+		info := new(RecommendInfo)
+		info.initInfo(db)
+		list = append(list, info)
+	}
+
+	return list, nil
+}
+
 func (mine *cacheContext) GetRecommendByOwner(owner string) ([]*RecommendInfo, error) {
 	if owner == "" {
 		return nil, errors.New("the owner is empty")
