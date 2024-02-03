@@ -22,6 +22,7 @@ func switchMotion(info *cache.MotionInfo) *pb.MotionInfo {
 	tmp.Creator = info.Creator
 	tmp.Count = info.Count
 	tmp.Sn = info.SN
+	tmp.Type = info.Type
 	tmp.Content = info.Meta()
 	tmp.Event = info.EventID
 	tmp.App = info.AppID
@@ -32,8 +33,19 @@ func switchMotion(info *cache.MotionInfo) *pb.MotionInfo {
 func (mine *MotionService) AddOne(ctx context.Context, in *pb.ReqMotionAdd, out *pb.ReplyMotionInfo) error {
 	path := "motion.addOne"
 	inLog(path, in)
+	if len(in.Scene) < 2 {
+		in.Scene = cache.DefaultScene
+	}
+	var info *cache.MotionInfo
+	var err error
+	arr := cache.Context().GetMotionsByRegex(in.Scene, in.Sn, in.Event, in.Content)
+	if len(arr) > 0 {
+		info = arr[0]
+		err = info.AddCount(in.Count, in.Operator)
+	} else {
+		info, err = cache.Context().CreateMotion(in.Scene, in.App, in.Sn, in.Event, in.Content, in.Operator, in.Type, in.Count)
+	}
 
-	info, err := cache.Context().CreateMotion(in.Scene, in.App, in.Sn, in.Event, in.Content, in.Operator, in.Count)
 	if err != nil {
 		out.Status = outError(path, err.Error(), pbstatus.ResultStatus_DBException)
 		return nil
@@ -158,6 +170,8 @@ func (mine *MotionService) GetStatistic(ctx context.Context, in *pb.RequestFilte
 			out.List = append(out.List, &pb.PairInfo{Key: eve, Count: uint64(num)})
 			out.Count += uint64(num)
 		}
+	} else if in.Field == "total" {
+		out.Count = cache.Context().GetMotionContentCount(in.Value)
 	}
 	out.Status = outLog(path, out)
 	return nil

@@ -16,6 +16,8 @@ import (
 	"os"
 )
 
+const DefaultScene = "system"
+
 type baseInfo struct {
 	ID       uint64 `json:"-"`
 	UID      string `json:"uid"`

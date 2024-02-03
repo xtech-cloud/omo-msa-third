@@ -2,6 +2,7 @@ package cache
 
 import (
 	"errors"
+	"fmt"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"omo.msa.third/proxy/nosql"
 	"time"
@@ -131,21 +132,41 @@ func (mine *cacheContext) GetRecommendsByQuote(quote string) ([]*RecommendInfo, 
 	return list, nil
 }
 
-func (mine *cacheContext) GetRecommendsByType(owner string, tp uint32) ([]*RecommendInfo, error) {
-	if owner == "" {
-		return nil, errors.New("the owner is empty")
+func (mine *cacheContext) GetRecommendsByType(scene string, tp uint32) ([]*RecommendInfo, error) {
+	if scene == "" {
+		scene = DefaultScene
 	}
-	dbs, err := nosql.GetRecommendsByType(owner, tp)
-	if err != nil {
-		return nil, err
-	}
-	list := make([]*RecommendInfo, 0, len(dbs))
-	for _, db := range dbs {
+	if tp > 100 {
+		//按人气动态获取推荐列表： 1=书籍； 2=地点
+		dbs, err := nosql.GetMotionsByTop(DefaultScene, 1, 50)
+		if err != nil {
+			return nil, err
+		}
+		list := make([]*RecommendInfo, 0, 1)
 		info := new(RecommendInfo)
-		info.initInfo(db)
-		list = append(list, info)
+		info.UID = fmt.Sprintf("recommend_%s-%d", DefaultScene, 1)
+		info.Type = uint8(tp)
+		info.Owner = DefaultScene
+		info.Targets = make([]string, len(dbs))
+		for _, db := range dbs {
+			info.Targets = append(info.Targets, db.Content)
+		}
+		info.Creator = DefaultScene
+		return list, nil
+	} else {
+		//手动配置的推荐
+		dbs, err := nosql.GetRecommendsByType(scene, tp)
+		if err != nil {
+			return nil, err
+		}
+		list := make([]*RecommendInfo, 0, len(dbs))
+		for _, db := range dbs {
+			info := new(RecommendInfo)
+			info.initInfo(db)
+			list = append(list, info)
+		}
+		return list, nil
 	}
-	return list, nil
 }
 
 func (mine *cacheContext) RemoveRecommend(uid, operator string) error {

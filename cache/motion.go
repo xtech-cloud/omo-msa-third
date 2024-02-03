@@ -12,6 +12,7 @@ import (
 
 type MotionInfo struct {
 	Count uint32
+	Type  uint32
 	baseInfo
 	Scene   string
 	AppID   string
@@ -23,7 +24,7 @@ type MotionInfo struct {
 	bundle  string
 }
 
-func (mine *cacheContext) CreateMotion(scene, app, sn, eveID, content, operator string, count uint32) (*MotionInfo, error) {
+func (mine *cacheContext) CreateMotion(scene, app, sn, eveID, content, operator string, tp, count uint32) (*MotionInfo, error) {
 	db := new(nosql.Motion)
 	db.UID = primitive.NewObjectID()
 	db.ID = nosql.GetMotionNextID()
@@ -36,6 +37,10 @@ func (mine *cacheContext) CreateMotion(scene, app, sn, eveID, content, operator 
 	db.SN = sn
 	db.EventID = eveID
 	db.Count = count
+	db.Type = tp
+	if db.Count < 1 {
+		db.Count = 1
+	}
 	db.Content = content
 
 	err := nosql.CreateMotion(db)
@@ -108,6 +113,45 @@ func (mine *cacheContext) GetMotionBy(scene, sn, event, content string) *MotionI
 		return info
 	}
 	return nil
+}
+
+func (mine *cacheContext) GetMotionContentCount(content string) uint64 {
+	if len(content) < 2 {
+		return 0
+	}
+	var num uint64 = 0
+	dbs, err := nosql.GetMotionsByContent2(content)
+	if err != nil {
+		return num
+	}
+	for _, db := range dbs {
+		num += uint64(db.Count)
+	}
+	return num
+}
+
+func (mine *cacheContext) GetMotionsByRegex(scene, sn, event, content string) []*MotionInfo {
+	if len(sn) > 0 {
+		if len(event) > 2 {
+			var info = mine.GetMotionBy(scene, sn, event, content)
+			arr := make([]*MotionInfo, 0, 1)
+			arr = append(arr, info)
+			return arr
+		} else {
+			return mine.GetMotionsByContent(scene, sn, content)
+		}
+	}
+	dbs, err := nosql.GetMotionsByRegex(scene, content)
+	if err != nil {
+		return nil
+	}
+	list := make([]*MotionInfo, 0, len(dbs))
+	for _, db := range dbs {
+		info := new(MotionInfo)
+		info.initInfo(db)
+		list = append(list, info)
+	}
+	return list
 }
 
 func (mine *cacheContext) GetMotionsByContent(scene, sn, content string) []*MotionInfo {
@@ -189,6 +233,15 @@ func (mine *cacheContext) GetMotionsByEveContent(scene, event, content string) [
 	return list
 }
 
+func (mine *cacheContext) GetMotionsTopContent(tp, top uint32) []string {
+	dbs, _ := nosql.GetMotionsByTop(DefaultScene, tp, top)
+	list := make([]string, 0, len(dbs))
+	for _, db := range dbs {
+		list = append(list, db.Content)
+	}
+	return list
+}
+
 func getMotionInfo(bundle string, list []*MotionInfo) *MotionInfo {
 	for _, info := range list {
 		if info.bundle == bundle {
@@ -212,6 +265,7 @@ func (mine *MotionInfo) initInfo(db *nosql.Motion) {
 	mine.AppID = db.AppID
 	mine.Count = db.Count
 	mine.UserID = db.UserID
+	mine.Type = db.Type
 	mine.meta = db.Content
 
 	if len(mine.meta) > 2 && gjson.Valid(mine.meta) {

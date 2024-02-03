@@ -12,6 +12,9 @@ build:
 		-X 'main.CommitID=${COMMIT_SHA1}' \
 		"\
 		-o ./bin/${APP_NAME}
+	mkdir -p dist
+	rm -f dist/${APP_NAME}-${BUILD_VERSION}.tar.gz
+	tar -zcf dist/${APP_NAME}-${BUILD_VERSION}.tar.gz ./bin/${APP_NAME}
 
 .PHONY: run
 run:
@@ -24,6 +27,9 @@ call:
 .PHONY: tester
 tester:
 	go build -o ./bin/ ./tester
+	mkdir -p dist
+	rm -f dist/${APP_NAME}-${BUILD_VERSION}.tar.gz
+	tar -zcf dist/${APP_NAME}-${BUILD_VERSION}.tar.gz ./bin/${APP_NAME}
 
 .PHONY: dist
 dist:

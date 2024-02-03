@@ -100,7 +100,7 @@ func (mine *cacheContext) checkOldEvents(start, end int64) {
 	for _, item := range all {
 		motion := mine.GetMotionBy(item.Scene, item.SN, item.Event, item.Content)
 		if motion == nil {
-			_, _ = mine.CreateMotion(item.Scene, "", item.SN, item.Event, item.Content, "", item.Count)
+			_, _ = mine.CreateMotion(item.Scene, "", item.SN, item.Event, item.Content, "", 0, item.Count)
 		} else {
 			_ = motion.AddCount(item.Count, "")
 			if motion.Updated > item.Timestamp {
@@ -113,7 +113,7 @@ func (mine *cacheContext) checkOldEvents(start, end int64) {
 func (mine *cacheContext) checkDevice(scene, sn string) *MotionInfo {
 	motion := mine.GetMotionBy(scene, sn, "", "")
 	if motion == nil {
-		motion, _ = mine.CreateMotion(scene, "", sn, "", "", "", 0)
+		motion, _ = mine.CreateMotion(scene, "", sn, "", "", "", 0, 1)
 	}
 	return motion
 }

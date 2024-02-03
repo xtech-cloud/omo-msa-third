@@ -5,6 +5,7 @@ import (
 	"errors"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"time"
 )
 
@@ -22,6 +23,7 @@ type Motion struct {
 	Operator    string             `json:"operator" bson:"operator"`
 
 	Count   uint32 `json:"count" bson:"count"`
+	Type    uint32 `json:"type" bson:"type"`
 	Scene   string `json:"scene" bson:"scene"`
 	AppID   string `json:"app" bson:"app"`
 	SN      string `json:"sn" bson:"sn"`
@@ -80,6 +82,44 @@ func GetMotion(uid string) (*Motion, error) {
 		return nil, err1
 	}
 	return model, nil
+}
+
+func GetMotionsByContent2(content string) ([]*Motion, error) {
+	filter := bson.M{"content": content, TimeDeleted: 0}
+	cursor, err1 := findMany(TableMotion, filter, 0)
+	if err1 != nil {
+		return nil, err1
+	}
+	var items = make([]*Motion, 0, 20)
+	for cursor.Next(context.Background()) {
+		var node = new(Motion)
+		if err := cursor.Decode(node); err != nil {
+			return nil, err
+		} else {
+			items = append(items, node)
+		}
+	}
+	return items, nil
+}
+
+func GetMotionsByTop(scene string, tp, num uint32) ([]*Motion, error) {
+	filter := bson.M{"scene": scene, "type": tp, TimeDeleted: 0}
+	opts := options.Find()
+	opts.SetSort(bson.D{{"count", -1}}).SetLimit(int64(num))
+	cursor, err1 := findManyByOpts(TableMotion, filter, opts)
+	if err1 != nil {
+		return nil, err1
+	}
+	var items = make([]*Motion, 0, 20)
+	for cursor.Next(context.Background()) {
+		var node = new(Motion)
+		if err := cursor.Decode(node); err != nil {
+			return nil, err
+		} else {
+			items = append(items, node)
+		}
+	}
+	return items, nil
 }
 
 func GetMotionsByEventID(scene, eve string) ([]*Motion, error) {
@@ -156,6 +196,24 @@ func GetMotionsByOwner(scene string) ([]*Motion, error) {
 
 func GetMotionsBy(scene, sn, event, content string) ([]*Motion, error) {
 	filter := bson.M{"scene": scene, "sn": sn, "event": event, "content": content, TimeDeleted: 0}
+	cursor, err1 := findMany(TableMotion, filter, 0)
+	if err1 != nil {
+		return nil, err1
+	}
+	var items = make([]*Motion, 0, 20)
+	for cursor.Next(context.Background()) {
+		var node = new(Motion)
+		if err := cursor.Decode(node); err != nil {
+			return nil, err
+		} else {
+			items = append(items, node)
+		}
+	}
+	return items, nil
+}
+
+func GetMotionsByRegex(scene, content string) ([]*Motion, error) {
+	filter := bson.M{"scene": scene, "content": bson.M{"$regex": content}, TimeDeleted: 0}
 	cursor, err1 := findMany(TableMotion, filter, 0)
 	if err1 != nil {
 		return nil, err1
