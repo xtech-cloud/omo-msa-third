@@ -2,7 +2,7 @@ package config
 
 const defaultJson string = `{
 	"service": {
-		"address": ":7080",
+		"address": ":7081",
 		"ttl": 15,
 		"interval": 10
 	},

@@ -5,17 +5,23 @@ import (
 	"fmt"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"omo.msa.third/proxy/nosql"
+	"omo.msa.third/tool"
+	"strings"
 	"time"
 )
 
 const (
-	SourceActivity SourceType = 0
-	SourceEntity   SourceType = 1
-	SourceArticle  SourceType = 2
-	SourcePhoto    SourceType = 3
+	RecommendAll            RecommendType = 0
+	RecommendSubject        RecommendType = 1
+	RecommendExpert         RecommendType = 2
+	RecommendAlbum          RecommendType = 3
+	RecommendRecitation     RecommendType = 4
+	RecommendRead           RecommendType = 5
+	RecommendPlace          RecommendType = 6
+	RecommendBookPopularity RecommendType = 101
 )
 
-type SourceType uint8
+type RecommendType uint8
 
 type RecommendInfo struct {
 	Type uint8
@@ -137,8 +143,9 @@ func (mine *cacheContext) GetRecommendsByType(scene string, tp uint32) ([]*Recom
 		scene = DefaultScene
 	}
 	if tp > 100 {
-		//按人气动态获取推荐列表： 1=书籍； 2=地点
-		dbs, err := nosql.GetMotionsByTop(DefaultScene, 1, 50)
+		//按人气动态获取推荐列表： 101=书籍； 102=地点
+		t := tp - 100
+		dbs, err := nosql.GetMotionsByTop(DefaultScene, t, 50)
 		if err != nil {
 			return nil, err
 		}
@@ -147,11 +154,15 @@ func (mine *cacheContext) GetRecommendsByType(scene string, tp uint32) ([]*Recom
 		info.UID = fmt.Sprintf("recommend_%s-%d", DefaultScene, 1)
 		info.Type = uint8(tp)
 		info.Owner = DefaultScene
-		info.Targets = make([]string, len(dbs))
+		info.Targets = make([]string, 0, len(dbs))
 		for _, db := range dbs {
-			info.Targets = append(info.Targets, db.Content)
+			con := strings.TrimSpace(db.Content)
+			if len(con) > 1 && !tool.HasItem(info.Targets, con) {
+				info.Targets = append(info.Targets, con)
+			}
 		}
 		info.Creator = DefaultScene
+		list = append(list, info)
 		return list, nil
 	} else {
 		//手动配置的推荐
